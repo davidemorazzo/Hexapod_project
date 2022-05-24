@@ -4,7 +4,7 @@ close all
 
 %% Create robot
 % Link length
-l0 = 5;
+% l0 = 5;
 l1 = 3.75;
 l2 = 6.05;
 o_1 = -3.1;
