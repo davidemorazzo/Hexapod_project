@@ -36,24 +36,24 @@ while true
         case'wait_for_input'
             value = input("Insert command");
             if value == 1
-                next_state = 'walk_forward'
+                next_state = 'walk_forward';
             elseif value == 2
-                next_state = 'walk_backward'
+                next_state = 'walk_backward';
             end
     
     
         % state walk_forward
         case 'walk_forward'
-            next_state = 'wait_for_input'
+            next_state = 'wait_for_input';
     
     
         % Default case
         otherwise
-            next_state = 'wait_for_input'
+            next_state = 'wait_for_input';
     
     end
 
-    current_state = next_state
+    current_state = next_state;
 end
 
 
