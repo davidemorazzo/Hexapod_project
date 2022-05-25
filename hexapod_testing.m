@@ -38,7 +38,7 @@ leg = createLeg(5);
 theta_a = 0; % motion direction [deg]
 direction = [sind(theta_a) cosd(theta_a) 0]'; % direction vector of hexapod
 D = 5; % step length
-prism_start = 3;
+prism_start = 2;
 circle_limits = false;
 
 % determination of the stable point
