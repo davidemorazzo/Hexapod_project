@@ -20,7 +20,7 @@ format compact
 %   - right_legs
 %   - left_legs
 
-% - rotate_rigth
+% - rotate_right
 %   - right_legs
 %   - left_legs
 %% Connection and setup

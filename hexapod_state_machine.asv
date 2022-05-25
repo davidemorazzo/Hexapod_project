@@ -20,10 +20,11 @@ format compact
 %   - right_legs
 %   - left_legs
 
-% - rotate_rigth
+% - rotate_right
 %   - right_legs
 %   - left_legs
 %% Connection and setup
+load angle.mat
 com_port = '';
 a = arduino(com_port, 'uno',...
     'Libraries', {'Servo' 'Ultrasonic' 'I2C'},...
@@ -39,14 +40,25 @@ s4_2 = servo(a, 'D12');
 s5_1 = servo(a, 'D11');
 s5_2 = servo(a, 'D10');
 s6_1 = servo(a, 'D9');
-s6_2 = servo(a, '')
-s2 = servo(a, 'D10');
-s1 = servo(a, 'D11');
+s6_2 = servo(a, 'D8');
+writePosition(s1_1, normalize_angle(angle_1_1, 'deg'));
+writePosition(s1_2, normalize_angle(angle_1_2, 'deg'));
+writePosition(s2_1, normalize_angle(angle_2_1, 'deg'));
+writePosition(s2_2, normalize_angle(angle_2_2, 'deg'));
+writePosition(s3_1, normalize_angle(angle_3_1, 'deg'));
+writePosition(s3_2, normalize_angle(angle_3_2, 'deg'));
+writePosition(s4_1, normalize_angle(angle_4_1, 'deg'));
+writePosition(s4_2, normalize_angle(angle_4_2, 'deg'));
+writePosition(s5_1, normalize_angle(angle_5_1, 'deg'));
+writePosition(s5_2, normalize_angle(angle_5_2, 'deg'));
+writePosition(s6_1, normalize_angle(angle_6_1, 'deg'));
+writePosition(s6_2, normalize_angle(angle_6_2, 'deg'));
 
+%% Robot's leg creation
+legs = [createLeg(1) createLeg(2) createLeg(3) createLeg(4) createLeg(5) createLeg(6)]';
 %% State machine
 current_state = 'wait_for_input';
 next_state = '';
-
 
 % State machine
 while true
@@ -66,7 +78,7 @@ while true
 
         % state walk_forward
         case 'walk_forward'
-
+            
             next_state = 'wait_for_input';
             disp("Walking forward yee")
         case 'walk_backward'

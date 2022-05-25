@@ -13,7 +13,7 @@ o_2 = -2.25;
 prism_freedom = 2;
 
 % Create joints
-base = Prismatic('qlim', 6, 'a', l0);
+base = Prismatic('qlim', [0 1], 'a', l0);
 switch index
     case 1
         leg1 = Revolute('a',l1,'alpha', -pi/2, 'd',o_1, 'qlim', [0 pi], 'offset', pi/4);
