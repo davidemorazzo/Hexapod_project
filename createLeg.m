@@ -78,6 +78,6 @@ switch index
     otherwise
         leg = SerialLink.empty;
 end
-% leg.plot([0 pi/2 pi/2])
+% leg.plot([0 0 0])
 % leg.fkine([0 pi/2 pi/2])
 end

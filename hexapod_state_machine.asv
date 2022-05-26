@@ -42,20 +42,31 @@ s5_2 = servo(a, 'D10');
 s6_1 = servo(a, 'D9');
 s6_2 = servo(a, 'D8');
 servomotors = [s1_1, s1_2, s2_1, s2_2, s3_1, s3_2, s4_1, s4_2, s5_1, s5_2, s6_1, s6_2]';
-stable_position(servomotors)
+writePosition(s1_1, normalize_angle(angles(1).a, 'deg'));
+writePosition(s1_2, normalize_angle(angles(1).b, 'deg'));
+writePosition(s2_1, normalize_angle(angles(2).a, 'deg'));
+writePosition(s2_2, normalize_angle(angles(2).b, 'deg'));
+writePosition(s3_1, normalize_angle(angles(3).a, 'deg'));
+writePosition(s3_2, normalize_angle(angles(3).b, 'deg'));
+writePosition(s4_1, normalize_angle(angle_4_1, 'deg'));
+writePosition(s4_2, normalize_angle(angle_4_2, 'deg'));
+writePosition(s5_1, normalize_angle(angle_5_1, 'deg'));
+writePosition(s5_2, normalize_angle(angle_5_2, 'deg'));
+writePosition(s6_1, normalize_angle(angle_6_1, 'deg'));
+writePosition(s6_2, normalize_angle(angle_6_2, 'deg'));
+
 %% Robot's leg creation
 legs = [createLeg(1) createLeg(2) createLeg(3) createLeg(4) createLeg(5) createLeg(6)]';
 %% State machine
 current_state = 'wait_for_input';
 next_state = '';
-N_points = 8;      % points in the leg trajectory
-visualize = 0;
-tj_forward = zeros(6, N_points, 2); % allocation for speed
-tj_return = zeros(6, N_points, 2);
+N_points = 10;      % points in the leg trajectory
+visualize = 1;
+tj_forward = zeros(6, n_points, 2); % allocation for speed
+tj_return = zeros(6, n_points, 2);
 
 % State machine
 while true
-    stable_position(servomotors);
     switch current_state
         
         % ----- State wait_for_input -------
@@ -64,7 +75,7 @@ while true
                 "\n2 -> Walk backward" + ...
                 "\n3 -> Rotate rigth" + ...
                 "\n4 -> Rotate left" + ...
-                "\n5 -> Steady\n");
+                "\n5 -> Steady");
             user_input = int8(user_input);
             switch user_input
                 case 1
@@ -89,17 +100,17 @@ while true
             % Creation of trajectories
             for i=1:6
                 % Doing the kinematics for each leg
-                [tj_f_tmp, tj_b_tmp] = legTrajectory(legs, step, theta_a, N_points, i, visualize);
+                [tj_f_tmp, tj_b_tmp] = legTrajectory(legs, step, direction, N_points, i, visualize);
                 tj_forward(i, :, :) = tj_f_tmp;
                 tj_return(i, :, :) = tj_b_tmp;
             end
 
             % Triangle gait phase one -> Move legs 2,4,6 forward and others
             % back
-            execute_trajectory(servomotors, tj_forward, tj_return, 1, N_points);
+            execute_trajectory(servomotors, forward_tj, return_tj, 1, N_points);
             % Triangle gait phase one -> Move legs 1,3,5 forward and others
             % back
-            execute_trajectory(servomotors, tj_forward, tj_return, 2, N_points);
+            execute_trajectory(servomotors, forward_tj, return_tj, 2, N_points);
             
             % Next state evaluation
             next_state = 'wait_for_input';

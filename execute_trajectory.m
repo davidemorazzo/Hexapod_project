@@ -21,23 +21,23 @@ end
 
 for i=1:n_points
     % leg 1
-    writePosition(servomotors(1), normalize_angle(tj_1(i,1), 'deg'));
-    writePosition(servomotors(2), normalize_angle(tj_1(i,2), 'deg'));
+    writePosition(servomotors(1), tj_1(1, i, 1));
+    writePosition(servomotors(2), tj_1(1, i, 2));
     % leg 2
-    writePosition(servomotors(3), normalize_angle(tj_2(i,1), 'deg'));
-    writePosition(servomotors(4), normalize_angle(tj_2(i,2), 'deg'));
+    writePosition(servomotors(3), tj_2(1, i,1));
+    writePosition(servomotors(4), tj_2(1, i,2));
     % leg 3
-    writePosition(servomotors(5), normalize_angle(tj_3(i,1), 'deg'));
-    writePosition(servomotors(6), normalize_angle(tj_3(i,2), 'deg'));        
+    writePosition(servomotors(5), tj_3(1, i, 1));
+    writePosition(servomotors(6), tj_3(1, i, 2));        
     % leg 4
-    writePosition(servomotors(7), normalize_angle(tj_4(i,1), 'deg'));
-    writePosition(servomotors(8), normalize_angle(tj_4(i,2), 'deg'));
+    writePosition(servomotors(7), tj_4(1, i, 1));
+    writePosition(servomotors(8), tj_4(1, i, 2));
     % leg 5
-    writePosition(servomotors(9),  normalize_angle(tj_5(i,1), 'deg'));
-    writePosition(servomotors(10), normalize_angle(tj_5(i,2), 'deg'));
+    writePosition(servomotors(9),  tj_5(1, i, 1));
+    writePosition(servomotors(10), tj_5(1, i, 2));
     % leg 6
-    writePosition(servomotors(11), normalize_angle(tj_6(i,1), 'deg'));
-    writePosition(servomotors(12), normalize_angle(tj_6(i,2), 'deg'));
+    writePosition(servomotors(11), tj_6(1, i, 1));
+    writePosition(servomotors(12), tj_6(1, i, 2));
 end
 
 end

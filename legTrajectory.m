@@ -1,4 +1,4 @@
-function [direct_traj_n, return_traj_n] = legTrajectory(legs, step_length, theta_a, N_points, leg_index)
+function [direct_traj_n, return_traj_n] = legTrajectory(legs, step_length, theta_a, N_points, leg_index, visualize)
 % returning the direct and return trajectory normalized (0 to 1) and in the robot angle
 
 load angle.mat
@@ -12,7 +12,10 @@ load angle.mat
 % determination of the stable point
 prism_start = 2; % starting point of the prismatic joint (vertical degree of freedom)
 M = [1 1 1 0 0 0];
-max_err = 1;
+saturation_a_max = 2/3*pi; % saturation limits
+saturation_a_min = pi/3;
+saturation_b_max = 3/4*pi;
+saturation_b_min = pi/4;
 
 direction = [sind(theta_a) cosd(theta_a) 0]';
 q_stable = [prism_start deg2rad(180-angles(leg_index).a) deg2rad(180-angles(leg_index).b)]; % stable configuration, trasformation 
@@ -29,7 +32,7 @@ Pe = SE3(P1);
 
 % Inverse kinematic trajectory
 tj_points = ctraj(Ps, Pe, N_points);
-direct_traj_sim = legs(leg_index).ikine(tj_points, 'mask', M, 'q0',q_stable, 'tol', 0.2);
+direct_traj_sim = legs(leg_index).ikine(tj_points, 'mask', M, 'q0', q_stable, 'tol', 0.2);
 
 % Return trajectory
 max_height = pi/8; % [rad] return angle of joint 2
@@ -39,17 +42,24 @@ return_traj_sim(N_points/2+1:N_points, :) = jtraj([direct_traj_sim(N_points/2,1)
     direct_traj_sim(1, :), N_points/2);
 % return_traj_sim
 
-% Normalization and return
-if max(err)>max_err
-    direct_traj_n = [];
-    return_traj_n = [];
-else
-    plot_leg(legs(leg_index), direct_traj_sim, return_traj_sim, P0, P1, 0, leg_index);
-    direct_traj_sim = direct_traj_sim(:, 2:3);
-    direct_traj_n = normalize_angle(rad2deg(direct_traj_sim), 'deg');
-    return_traj_sim = return_traj_sim(:, 2:3);
-    return_traj_n = normalize_angle(rad2deg(return_traj_sim), 'deg');
-    % Plot results
-end
+direct_traj_sim(:, 2) = min(saturation_a_max, max(saturation_a_min, direct_traj_sim(:, 2))); % saturated trajectory for motor a
+direct_traj_sim(:, 3) = min(saturation_b_max, max(saturation_b_min, direct_traj_sim(:, 3))); % saturated trajectory for motor b
+return_traj_sim(:, 2) = min(saturation_a_max, max(saturation_a_min, return_traj_sim(:, 2))); 
+return_traj_sim(:, 3) = min(saturation_b_max, max(saturation_b_min, return_traj_sim(:, 3)));
 
+% Normalization and return
+if visualize==1
+    plot_leg(legs(leg_index), direct_traj_sim, return_traj_sim, P0, P1, 0, leg_index); % Plot results
+end
+direct_traj_sim = direct_traj_sim(:, 2:3);
+return_traj_sim = return_traj_sim(:, 2:3);
+if (leg_index==4 || leg_index==5 || leg_index==6) 
+    direct_traj_n = normalize_angle(rad2deg(pi-direct_traj_sim), 'deg');
+    return_traj_n = normalize_angle(rad2deg(pi-return_traj_sim), 'deg');
+else
+    direct_traj_n(:, 1) = normalize_angle(rad2deg(pi-direct_traj_sim(:, 1)), 'deg');
+    direct_traj_n(:, 2) = normalize_angle(rad2deg(direct_traj_sim(:, 2)), 'deg');
+    return_traj_n(:, 1) = normalize_angle(rad2deg(pi-return_traj_sim(:, 1)), 'deg');
+    return_traj_n(:, 2) = normalize_angle(rad2deg(return_traj_sim(:, 2)), 'deg');
+end
 end
