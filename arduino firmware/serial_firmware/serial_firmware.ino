@@ -6,7 +6,7 @@ Servo head_servo;
 
 void setup() {
   // Attach servomotors to the correct pin
-  servomotors[0].attach(3); //s11
+  servomotors[0].attach(A0); //s11
   servomotors[1].attach(2); //s12
   servomotors[2].attach(5); //s21
   servomotors[3].attach(4); //s22
@@ -18,21 +18,31 @@ void setup() {
   servomotors[9].attach(10); //s52
   servomotors[10].attach(9); //s61
   servomotors[11].attach(8); //s62
-  head_servo.attach(A0);
-
+  pinMode(3, OUTPUT); // head
+  /*
+  Setting   Divisor   Frequency
+  0x01      1         31372.55
+  0x02      8         3921.16
+  0x03      32        980.39
+  0x04      64        490.20   <--DEFAULT
+  0x05      128       245.10
+  0x06      256       122.55
+  0x07      1024      30.64
+  */
+  TCCR2B = TCCR2B & 0b11111000 | 0x05;
+  
   // begin serial
-  Serial.begin(115200);
+  Serial.begin(57600);
   // wait serial to connect
   Serial.flush();
   while(!Serial){}
   Serial.println("Arduino Connected");
-  servomotors[0].write(0);
 }
 
 uint8_t command_id;
 char bytes_read[1];
-char angle_buffer[20] = {0};
 uint8_t current_angle;
+float dc;
 
 
 void loop() {
@@ -41,26 +51,21 @@ void loop() {
   1 -> read and implement servomotors positions
   2 -> write ultrasonic measurement
   3 -> write IMU measurements
+  4 -> head position
   */
   
   if(Serial.available() > 0){
     // something to read
 
     command_id = Serial.read();  
-    Serial.write(command_id);
+    //Serial.write(command_id);
     
 
     // commands options
     switch(int(command_id)){
       case 1:
-        
         // read motor positions
-        //bytes_read = Serial.readBytesUntil('\n', angle_buffer, 20);
-        //Serial.write(bytes_read);
-        // motor positions are coded in int16
-        
         for(int8_t i=0; i<12; i++){
-          //int16_t current_angle = angle_buffer[i];
           Serial.readBytes(bytes_read, 1);
           current_angle = (uint8_t) bytes_read[0];
           servomotors[i].write((int)current_angle);
@@ -74,7 +79,15 @@ void loop() {
       case 3:
       // write IMU measurements
       break;
-      
+
+      case 4:
+      //head position
+        Serial.readBytes(bytes_read, 1);
+        current_angle = (uint8_t) bytes_read[0];
+        dc = map(current_angle, 0, 180, 30, 160);
+        analogWrite(3, dc);
+
+      // Default case
       default:
       break;
     }
