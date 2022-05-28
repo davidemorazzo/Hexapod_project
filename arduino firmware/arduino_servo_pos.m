@@ -9,12 +9,13 @@ function arduino_servo_pos(serial_obj, positions)
     
     % Send command_id so arduino understand the following data. Command '1'
     % means servomotor positions
-    serial_obj.write(1, 'int8');
+    serial_obj.writeline('1');
     
     % Write on the serial each angle in order as a byte.
     for i=1:12
-        angle = uint8(positions(i));
-        serial_obj.write(angle, 'char');
+%         angle = uint8(positions(i));
+        serial_obj.writeline(int2str(positions(i)));
+%         pause(0.001)
     end
 
 end
