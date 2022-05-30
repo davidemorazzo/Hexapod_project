@@ -32,7 +32,7 @@ void setup() {
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
   
   // begin serial
-  Serial.begin(30000);
+  Serial.begin(57600);
   // wait serial to connect
   Serial.flush();
   while(!Serial){}
@@ -43,7 +43,6 @@ uint8_t command_id;
 char bytes_read[1];
 uint8_t current_angle;
 float dc;
-String str;
 
 
 void loop() {
@@ -58,18 +57,18 @@ void loop() {
   if(Serial.available() > 0){
     // something to read
 
-    str = Serial.readStringUntil("\n");
-    command_id = str.toInt();
+    command_id = Serial.read();  
     //Serial.write(command_id);
-    //str = Serial.readStringUntil("\n"); 
-    //Serial.println(str.toInt());
+    
+
     // commands options
-    switch(command_id){
+    switch(int(command_id)){
       case 1:
         // read motor positions
-        for(uint8_t i=0; i<12; i++){
-          str = Serial.readStringUntil("\n");
-          servomotors[i].write(str.toInt());
+        for(int8_t i=0; i<12; i++){
+          Serial.readBytes(bytes_read, 1);
+          current_angle = (uint8_t) bytes_read[0];
+          servomotors[i].write((int)current_angle);
         }
       break;
       
