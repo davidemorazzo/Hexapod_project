@@ -3,12 +3,16 @@ function leg = createLeg(index) % Leg index
 %% Create robot
 % Indexes -> CCW from robot head
 % Link lengths (all parameters are in cm)
+clear
+clc
+close all
 
 l0 = 0;
 l1 = 3.75;
 l2 = 6.05;
 o_1 = -3.1;
 o_2 = -2.25;
+index = 1;
 
 prism_freedom = 2;
 
@@ -78,6 +82,6 @@ switch index
     otherwise
         leg = SerialLink.empty;
 end
-% leg.plot([0 0 0])
+leg.plot([0 0 pi/2])
 % leg.fkine([0 pi/2 pi/2])
 end

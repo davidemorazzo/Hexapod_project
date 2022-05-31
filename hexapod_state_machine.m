@@ -24,38 +24,43 @@ format compact
 %   - right_legs
 %   - left_legs
 %% Connection and setup
+
 load angle.mat
-com_port = 'com11';
-a = arduino(com_port, 'uno',...
-    'Libraries', {'Servo' 'Ultrasonic' 'I2C'},...
-    'BaudRate', 128000);
-s1_1 = servo(a, 'D3');
-s1_2 = servo(a, 'D2');
-s2_1 = servo(a, 'D5');
-s2_2 = servo(a, 'D4');
-s3_1 = servo(a, 'D7');
-s3_2 = servo(a, 'D6');
-s4_1 = servo(a, 'D13');
-s4_2 = servo(a, 'D12');
-s5_1 = servo(a, 'D11');
-s5_2 = servo(a, 'D10');
-s6_1 = servo(a, 'D9');
-s6_2 = servo(a, 'D8');
-servomotors = [s1_1, s1_2, s2_1, s2_2, s3_1, s3_2, s4_1, s4_2, s5_1, s5_2, s6_1, s6_2]';
-stable_position(servomotors)
-%% Robot's leg creation
+com_port = '';
+serial_obj = serialport(com_port, 57600);
+serial_obj.configureTerminator("CR/LF")
+pause(1);
+arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
+arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
+
+%% Robot's leg creation (simulation)
+
 legs = [createLeg(1) createLeg(2) createLeg(3) createLeg(4) createLeg(5) createLeg(6)]';
+
 %% State machine
 current_state = 'wait_for_input';
 next_state = '';
-N_points = 8;      % points in the leg trajectory
-visualize = 0;
-tj_forward = zeros(6, N_points, 2); % allocation for speed
+N_points = 20;      % points in the leg trajectory
+visualize = 0;  % visualization of simulation results
+% Tridimensional matrices: first dimension -> leg index, second dimension -> Number of trajectory points, 
+% third dimension -> motor index (anca e ginocchio)
+% we divide the total trajectory of each leg in 4 parts, support part is
+% the only one requiring inverse kinematics for each points, the other are:
+% - positioning: prepare the leg to move to execute the support phase
+% - return: return from the end of the support phase to the start
+% - stabilize: return from the end of the support phase to the stable point
+tj_support = zeros(6, N_points, 2); 
 tj_return = zeros(6, N_points, 2);
+tj_positioning = zeros(6, N_points/2, 2);
+tj_stabilize = zeros(6, N_points/2, 2);
+P0 = zeros(6, 1);
+P1 = zeros(6, 1);
+group1 = [1 3 5];
+group2 = [2 4 6];
 
 % State machine
 while true
-    stable_position(servomotors);
+%     arduino_servo_pos(serial_obj, 90*ones(12, 1)); 
     switch current_state
         
         % ----- State wait_for_input -------
@@ -83,24 +88,34 @@ while true
 
         % ----- state walk_forward -----
         case 'walk_forward'
-            step = 4; % step length
+            step = 3; % step length
             theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
-            
+             
             % Creation of trajectories
             for i=1:6
-                % Doing the kinematics for each leg
-                [tj_f_tmp, tj_b_tmp] = legTrajectory(legs, step, theta_a, N_points, i, visualize);
-                tj_forward(i, :, :) = tj_f_tmp;
-                tj_return(i, :, :) = tj_b_tmp;
+                % inverse kinematics for each leg
+                [tj_support(i, :, :), P0(i), P1(i)] = kinematic_inversion(legs, step, theta_a, i);
+                
+                % create joints' routines for each leg
+                tj_positioning(i, :, :) = create_joint_traj(tj_support, N_points, 'positioning');
+                tj_return(i, :, :) = create_joint_traj(tj_support, N_points, 'return');
+                tj_stabilize(i, :, :) = create_joint_traj(tj_support, N_points, 'stabilize');
             end
-
-            % Triangle gait phase one -> Move legs 2,4,6 forward and others
-            % back
-            execute_trajectory(servomotors, tj_forward, tj_return, 1, N_points);
-            % Triangle gait phase one -> Move legs 1,3,5 forward and others
-            % back
-            execute_trajectory(servomotors, tj_forward, tj_return, 2, N_points);
-            
+            % Group 1 -> legs 1,3,5; Group 2 -> legs 2,4,6
+            execute_trajectory(serial_obj, tj_positioning(group1, :, :), [], ...
+                'positioning', 'none', N_points);
+            execute_trajectory(serial_obj, tj_support(group1, :, :), tj_positioning(group2, :, :), ...
+                'execution', 'positioning', N_points);
+            for i=1:4
+                execute_trajectory(serial_obj, tj_return(group1, :, :), tj_support(group2, :, :), ...
+                    'return', 'execution', N_points);
+                execute_trajectory(serial_obj, tj_support(group1, :, :), tj_return(group2, :, :), ...
+                    'execution', 'return', N_points);
+            end
+            execute_trajectory(serial_obj, tj_stabilize(group1, :, :), tj_support(group2, :, :), ...
+                'stabilize', 'execution', N_points);
+            execute_trajectory(serial_obj, [], tj_stabilize(group2, :, :), ...
+                'none', 'stabilize', N_points);
             % Next state evaluation
             next_state = 'wait_for_input';
             disp("Walking forward yee")

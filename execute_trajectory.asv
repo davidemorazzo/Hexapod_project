@@ -5,33 +5,7 @@ if(strcmp(state_group1, 'positioning') && strcmp(state_group2, 'none'))
         positions_group1 = [traj_group1(1, i, :) traj_group1(2, i, :) traj_group1(3, i, :)];
         arduino_servo_pos(serial_obj, positions_group1, 1);
     end
-elseif(strcmp(state_group1, 'none') && strcmp(state_group2, 'positioning'))
-    for i=1:N_points/2
-        positions_group2 = [traj_group2(1, i, :) traj_group2(2, i, :) traj_group2(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group2, 2);
-    end
-elseif(strcmp(state_group1, 'execution') && strcmp(state_group2, 'positioning'))
-    for i=1:N_points/2
-        positions_group1 = [traj_group1(1, i, :) traj_group1(2, i, :) traj_group1(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group1, 1);
-        positions_group2 = [traj_group2(1, i, :) traj_group2(2, i, :) traj_group2(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group2, 2);
-    end
-    for i=(N_points/2+1):N_points
-        positions_group1 = [traj_group1(1, i, :) traj_group1(2, i, :) traj_group1(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group1, 1);
-    end
-elseif(strcmp(state_group2, 'execution') && strcmp(state_group1, 'positioning'))
-    for i=1:N_points/2
-        positions_group1 = [traj_group1(1, i, :) traj_group1(2, i, :) traj_group1(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group1, 1);
-        positions_group2 = [traj_group2(1, i, :) traj_group2(2, i, :) traj_group2(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group2, 2);
-    end
-    for i=(N_points/2+1):N_points
-        positions_group2 = [traj_group2(1, i, :) traj_group2(2, i, :) traj_group2(3, i, :)];
-        arduino_servo_pos(serial_obj, positions_group2, 2);
-    end
+elseif(strcmp(st))
 elseif(strcmp(state_group1, 'execution') && strcmp(state_group2, 'none'))
     for i=1:N_points
         positions_group1 = [traj_group1(1, i, :) traj_group1(2, i, :) traj_group1(3, i, :)];

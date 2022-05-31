@@ -1,6 +1,7 @@
-function [] = stable_position(servos)
+function [] = stable_position(serial_obj)
 
 load angle.mat
+
 writePosition(servos(1), normalize_angle(angles(1).a, 'deg'));
 writePosition(servos(2), normalize_angle(angles(1).b, 'deg'));
 writePosition(servos(3), normalize_angle(angles(2).a, 'deg'));
