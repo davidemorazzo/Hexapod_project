@@ -20,7 +20,7 @@ function [support_traj, P0, P1] = kinematic_inversion(legs, step, theta_a, leg_i
     
     
     % Trajectory saturation
-    support_traj_sim = saturate_traj(support_traj_sim, 'rad');
+    support_traj_sim = saturate_traj(support_traj_sim, 'rad', leg_index);
     
     % If dealing with left legs the positive rotation of the motor b is
     % the same as in simulation, always traslate in degree

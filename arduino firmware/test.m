@@ -22,7 +22,7 @@ for i = 1:length(data)
     arduino_servo_pos(serial_obj, data(i) * ones(6, 1), 1);
 %     arduino_servo_pos(serial_obj, data(i) * ones(6, 1), 2);
 %     arduino_head_pos(serial_obj, data(i));
-    pause(0.03)
+%     pause(0.03)
 end
 
 

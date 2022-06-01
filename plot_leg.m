@@ -1,4 +1,4 @@
-function OK = plot_leg(leg, direct_traj, P0, P1, joint_info, leg_index)
+function OK = plot_leg(leg, traj, P0, P1, joint_info, leg_index)
 
 l1 = 3.75;
 r_min = 1.2*l1;
@@ -9,16 +9,16 @@ figure
 title_support_phase = sprintf("Support phase joint %d", leg_index);
 sgtitle(title_support_phase)
 subplot(311)
-plot(direct_traj(:,1))          % plot bot height during movement
+plot(traj(:,1))          % plot bot height during movement
 ylabel('Height')
 grid on
 subplot(312)
-plot(direct_traj(:,2))          % plot bot joint 1 during movement
+plot(traj(:,2))          % plot bot joint 1 during movement
 xlabel('Trajectory point')
 ylabel('\theta_1')
 grid on
 subplot(313)
-plot(direct_traj(:,3))          % plot bot joint 2 during movement
+plot(traj(:,3))          % plot bot joint 2 during movement
 xlabel('Trajectory point')
 ylabel('\theta_2')
 grid on
@@ -43,7 +43,7 @@ plot3([P0(1) P1(1)], [P0(2) P1(2)], [P0(3) P1(3)], 'k--')
 % text(Pe.t(1), Pe.t(2)+0.3, Pe.t(3)+0.3, 'Pe')
 
 % Animate trajectory
-leg.plot(direct_traj,...
+leg.plot(traj,...
     'workspace', [-20 20 -20 20 -2 20], ...
     'noname', 'trail', 'b--.')
 

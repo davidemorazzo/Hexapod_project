@@ -21,5 +21,5 @@ function arduino_servo_pos(serial_obj, positions, leg_group)
         angle = uint8(positions(i));
         serial_obj.write(angle, 'char');
     end
-
+    pause(0.01)
 end
