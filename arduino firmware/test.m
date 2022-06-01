@@ -20,8 +20,8 @@ data = [45:1:120 120:-1:45];
 for i = 1:length(data)
     data(i)
     arduino_servo_pos(serial_obj, data(i) * ones(6, 1), 1);
-    arduino_servo_pos(serial_obj, data(i) * ones(6, 1), 2);
-    arduino_head_pos(serial_obj, data(i));
+%     arduino_servo_pos(serial_obj, data(i) * ones(6, 1), 2);
+%     arduino_head_pos(serial_obj, data(i));
     pause(0.03)
 end
 

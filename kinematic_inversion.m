@@ -15,17 +15,20 @@ function [support_traj, P0, P1] = kinematic_inversion(legs, step, theta_a, leg_i
     support_traj_sim = legs(leg_index).ikine(tj_points, 'mask', M, 'q0', q_stable, 'tol', 0.2);
     
     % Select only the joint variables of interest
+%     plot_leg(legs(leg_index), support_traj_sim, P0, P1, 0, leg_index); % Plot results
     support_traj_sim = support_traj_sim(:, 2:3);
+    
     
     % Trajectory saturation
     support_traj_sim = saturate_traj(support_traj_sim, 'rad');
     
     % If dealing with left legs the positive rotation of the motor b is
     % the same as in simulation, always traslate in degree
-    if (leg_index==4 || leg_index==5 || leg_index==6) 
-        support_traj = rad2deg(pi-support_traj_sim);
-    else
-        support_traj(:, 1) = rad2deg(pi-support_traj_sim(:, 1));
-        support_traj(:, 2) = rad2deg(support_traj_sim(:, 2));
-    end
+    support_traj = rad2deg(support_traj_sim);
+%     if (leg_index==4 || leg_index==5 || leg_index==6) 
+%         support_traj = rad2deg(pi-support_traj_sim);
+%     else
+%         support_traj(:, 1) = rad2deg(pi-support_traj_sim(:, 1));
+%         support_traj(:, 2) = rad2deg(support_traj_sim(:, 2));
+%     end
 end

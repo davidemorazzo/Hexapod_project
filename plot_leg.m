@@ -1,4 +1,4 @@
-function OK = plot_leg(leg, direct_traj, return_traj, P0, P1, joint_info, leg_index)
+function OK = plot_leg(leg, direct_traj, P0, P1, joint_info, leg_index)
 
 l1 = 3.75;
 r_min = 1.2*l1;
@@ -43,7 +43,7 @@ plot3([P0(1) P1(1)], [P0(2) P1(2)], [P0(3) P1(3)], 'k--')
 % text(Pe.t(1), Pe.t(2)+0.3, Pe.t(3)+0.3, 'Pe')
 
 % Animate trajectory
-leg.plot([direct_traj; return_traj],...
+leg.plot(direct_traj,...
     'workspace', [-20 20 -20 20 -2 20], ...
     'noname', 'trail', 'b--.')
 
