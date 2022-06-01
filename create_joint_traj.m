@@ -6,16 +6,16 @@ q_stable = [90 90]'; % stable position of the joints, to configure
 
 switch traj_type
     case 'return'
-        joints_traj(1:N_points/2, :) = jtraj(support_traj(end,:), [support_traj(N_points/2, 1) max_height], N_points/2);
-        joints_traj(N_points/2+1:N_points, :) = jtraj([support_traj(N_points/2+1, 1) max_height], support_traj(1, :), N_points/2);
+        joints_traj(1:N_points/2, :) = jtraj(support_traj(1, end,:), [support_traj(1, N_points/2, 1) max_height], N_points/2);
+        joints_traj(N_points/2+1:N_points, :) = jtraj([support_traj(1, N_points/2+1, 1) max_height], support_traj(1, 1, :), N_points/2);
     case 'positioning'
         % Positioning trajectory
-        joints_traj(1:N_rounded, :) = jtraj(q_stable, [support_traj(N_rounded, 1) max_height], N_rounded);
-        joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height], support_traj(1, :), ...
+        joints_traj(1:N_rounded, :) = jtraj(q_stable, [support_traj(1, N_rounded, 1) max_height], N_rounded);
+        joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(1, N_rounded, 1) max_height], support_traj(1, 1, :), ...
             N_points/2-N_rounded);
     case 'stabilize'
-        joints_traj(1:N_rounded, :) = jtraj(support_traj(end, :), [support_traj(N_rounded, 1) max_height], N_rounded);
-        joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height], q_stable, ...
+        joints_traj(1:N_rounded, :) = jtraj(support_traj(1, end, :), [support_traj(1, N_rounded, 1) max_height], N_rounded);
+        joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(1, N_rounded, 1) max_height], q_stable, ...
             N_points/2-N_rounded);
     otherwise
         joints_traj = [];

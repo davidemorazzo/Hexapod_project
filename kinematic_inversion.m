@@ -1,4 +1,4 @@
-function [support_traj, P0, P1] = kinematic_inversion(legs, step, theta_a, leg_index)
+function [support_traj, P0, P1] = kinematic_inversion(legs, step, theta_a, leg_index, N_points)
     
     prism_start = 2; % starting point of the prismatic joint (vertical degree of freedom)
     M = [1 1 1 0 0 0];

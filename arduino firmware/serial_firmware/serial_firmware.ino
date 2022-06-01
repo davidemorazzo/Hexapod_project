@@ -88,9 +88,9 @@ void loop() {
   if(Serial.available() > 0){
     // something to read
     //digitalWrite(13, HIGH);
-    command_id = Serial.read();  
-    //Serial.write(command_id);
-    
+    command_id = (uint8_t) Serial.read();
+//    Serial.println("Received:");  
+//    Serial.write(command_id);
 
     // commands options 1 -> move group 1, 2 -> move group 2, 3 -> ultrasonic measurements, 4 -> IMU measurements, 5 -> head position
     switch(int(command_id)){
@@ -98,8 +98,8 @@ void loop() {
         
         // read motor positions group 1
         for(uint8_t i=0; i<=9; i++){
-          current_angle = uint8_t(Serial.read());
-          //current_angle = (uint8_t) bytes_read[0];
+          Serial.readBytes(bytes_read, 1);
+          current_angle = (uint8_t) bytes_read[0];
           servomotors[i].write((int)current_angle);
           if(i%2==1){
             i+=2;
@@ -110,8 +110,8 @@ void loop() {
       case 2:
         // read motor positions group 2
         for(uint8_t i=2; i<=11; i++){
-          current_angle = uint8_t(Serial.read());
-          //current_angle = (uint8_t) bytes_read[0];
+          Serial.readBytes(bytes_read, 1);
+          current_angle = (uint8_t) bytes_read[0];
           servomotors[i].write((int)current_angle);
           if(i%2==1){
             i+=2;

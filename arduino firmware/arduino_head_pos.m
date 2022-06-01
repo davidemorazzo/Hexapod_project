@@ -5,7 +5,7 @@ function arduino_head_pos(serial_obj, position)
         
     % Send command_id so arduino understand the following data. Command '2'
     % means head servomotor position
-    serial_obj.write(4, 'int8');
+    serial_obj.write(5, 'int8');
     
     % Write the angle value on the seria as a byte
     serial_obj.write(uint8(position), 'char')

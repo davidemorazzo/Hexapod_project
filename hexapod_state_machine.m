@@ -26,7 +26,7 @@ format compact
 %% Connection and setup
 
 load angle.mat
-com_port = '';
+com_port = 'COM15';
 serial_obj = serialport(com_port, 57600);
 serial_obj.configureTerminator("CR/LF")
 pause(1);
@@ -40,7 +40,7 @@ legs = [createLeg(1) createLeg(2) createLeg(3) createLeg(4) createLeg(5) createL
 %% State machine
 current_state = 'wait_for_input';
 next_state = '';
-N_points = 20;      % points in the leg trajectory
+N_points = 100;      % points in the leg trajectory
 visualize = 0;  % visualization of simulation results
 % Tridimensional matrices: first dimension -> leg index, second dimension -> Number of trajectory points, 
 % third dimension -> motor index (anca e ginocchio)
@@ -53,8 +53,8 @@ tj_support = zeros(6, N_points, 2);
 tj_return = zeros(6, N_points, 2);
 tj_positioning = zeros(6, N_points/2, 2);
 tj_stabilize = zeros(6, N_points/2, 2);
-P0 = zeros(6, 1);
-P1 = zeros(6, 1);
+P0 = zeros(6, 3, 1);
+P1 = zeros(6, 3, 1);
 group1 = [1 3 5];
 group2 = [2 4 6];
 
@@ -94,12 +94,12 @@ while true
             % Creation of trajectories
             for i=1:6
                 % inverse kinematics for each leg
-                [tj_support(i, :, :), P0(i), P1(i)] = kinematic_inversion(legs, step, theta_a, i);
+                [tj_support(i, :, :), P0(i, :, :), P1(i, :, :)] = kinematic_inversion(legs, step, theta_a, i, N_points);
                 
                 % create joints' routines for each leg
-                tj_positioning(i, :, :) = create_joint_traj(tj_support, N_points, 'positioning');
-                tj_return(i, :, :) = create_joint_traj(tj_support, N_points, 'return');
-                tj_stabilize(i, :, :) = create_joint_traj(tj_support, N_points, 'stabilize');
+                tj_positioning(i, :, :) = create_joint_traj(tj_support(i, :, :), N_points, 'positioning');
+                tj_return(i, :, :) = create_joint_traj(tj_support(i, :, :), N_points, 'return');
+                tj_stabilize(i, :, :) = create_joint_traj(tj_support(i, :, :), N_points, 'stabilize');
             end
             % Group 1 -> legs 1,3,5; Group 2 -> legs 2,4,6
             execute_trajectory(serial_obj, tj_positioning(group1, :, :), [], ...
