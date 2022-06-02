@@ -25,13 +25,13 @@ format compact
 %   - left_legs
 %% Connection and setup
 
-% load angle.mat
-% com_port = 'COM15';
-% serial_obj = serialport(com_port, 57600);
-% serial_obj.configureTerminator("CR/LF")
-% pause(1);
-% arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
-% arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
+load angle.mat
+com_port = 'COM15';
+serial_obj = serialport(com_port, 57600);
+serial_obj.configureTerminator("CR/LF")
+pause(1);
+arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
+arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
 
 %% Robot's leg creation (simulation)
 close all
@@ -72,7 +72,7 @@ while true
         case'wait_for_input'
             user_input = input("Insert command\n1 -> Walk forward" + ...
                 "\n2 -> Walk backward" + ...
-                "\n3 -> Rotate rigth" + ...
+                "\n3 -> Rotate right" + ...
                 "\n4 -> Rotate left" + ...
                 "\n5 -> Steady\n");
             user_input = int8(user_input);
@@ -94,7 +94,7 @@ while true
         % ----- state walk_forward -----
         case 'walk_forward'
             step = 3; % step length
-            theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+            theta_a = -90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
             % Creation of trajectories
             for i=1:6
                 % inverse kinematics for each leg
@@ -110,14 +110,13 @@ while true
                 
                 tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
                 tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
-                pause
             end
             % Group 1 -> legs 1,3,5; Group 2 -> legs 2,4,6
             execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
                 'positioning', 'none', N_points);
             execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
                 'execution', 'positioning', N_points);
-            for i=1:4
+            for i=1:10
                 execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
                     'return', 'execution', N_points);
                 execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
@@ -149,14 +148,14 @@ while true
                 
                 tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
                 tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
-                pause
+%                 pause
             end
             % Group 1 -> legs 1,3,5; Group 2 -> legs 2,4,6
             execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
                 'positioning', 'none', N_points);
             execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
                 'execution', 'positioning', N_points);
-            for i=1:4
+            for i=1:2
                 execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
                     'return', 'execution', N_points);
                 execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
@@ -166,12 +165,77 @@ while true
                 'stabilizing', 'execution', N_points);
             execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
                 'none', 'stabilizing', N_points);
+            next_state = 'wait_for_input';
+        
         % ----- state rotate_left ---------
         case 'rotate_left'
-        
+            rotation_angle = 22.5;
+            [step1, theta_a1] = turn(legs, group1, rotation_angle);
+            [step2, theta_a2] = turn(legs, group2, rotation_angle);
+            j=1;
+            k=2;
+            for i=1:3
+                [tj_support(:, :, j), P0(j, :, :), P1(j, :, :)] = kinematic_inversion(legs, step1(i), theta_a1(i), j, N_points);
+                [tj_support(:, :, k), P0(k, :, :), P1(k, :, :)] = kinematic_inversion(legs, step2(i), theta_a2(i), k, N_points);
+                j=j+2;
+                k=k+2;
+            end
+            for i=1:6
+                tj_positioning(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'positioning', i);
+                tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
+                tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
+%                 pause
+            end
+            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
+                'positioning', 'none', N_points);
+            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
+                'execution', 'positioning', N_points);
+            for i=1:2
+                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
+                    'return', 'execution', N_points);
+                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
+                    'execution', 'return', N_points);
+            end
+            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
+                'stabilizing', 'execution', N_points);
+            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
+                'none', 'stabilizing', N_points);
+        next_state = 'wait_for_input';
 
         % ----- state rotate_right --------
         case 'rotate_right'
+            rotation_angle = -22.5;
+            [step1, theta_a1] = turn(legs, group1, rotation_angle);
+            [step2, theta_a2] = turn(legs, group2, rotation_angle);
+            j=1;
+            k=2;
+            for i=1:3
+                [tj_support(:, :, j), P0(j, :, :), P1(j, :, :)] = kinematic_inversion(legs, step1(i), theta_a1(i), j, N_points);
+                [tj_support(:, :, k), P0(k, :, :), P1(k, :, :)] = kinematic_inversion(legs, step2(i), theta_a2(i), k, N_points);
+                j=j+2;
+                k=k+2;
+            end
+            for i=1:6
+                tj_positioning(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'positioning', i);
+                tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
+                tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
+%                 pause
+            end
+            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
+                'positioning', 'none', N_points);
+            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
+                'execution', 'positioning', N_points);
+            for i=1:2
+                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
+                    'return', 'execution', N_points);
+                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
+                    'execution', 'return', N_points);
+            end
+            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
+                'stabilizing', 'execution', N_points);
+            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
+                'none', 'stabilizing', N_points);
+        next_state = 'wait_for_input';
 
         % ----- state steady --------------
         case 'steady'

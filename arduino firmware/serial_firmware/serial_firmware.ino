@@ -5,6 +5,7 @@
 // Servomotors declaration
 Servo servomotors[12];
 Servo head_servo;
+int offsets[12];
 
 //void ESP8266_ATCOMMAND(){
 //   Serial.begin(115200);       // set up a wifi serial communication baud rate 115200
@@ -43,6 +44,18 @@ void setup() {
   servomotors[10].attach(9); //s61
   servomotors[11].attach(8); //s62
   pinMode(3, OUTPUT); // head
+  offsets[0] = -5; 
+  offsets[1] = 1;
+  offsets[2] = -7;
+  offsets[3] = -3;
+  offsets[4] = 0;
+  offsets[5] = -10;
+  offsets[6] = 0;
+  offsets[7] = 5;
+  offsets[8] = -10;
+  offsets[9] = 10;
+  offsets[10] = 0;
+  offsets[11] = -8;
   /*
   Setting   Divisor   Frequency
   0x01      1         31372.55
@@ -100,7 +113,7 @@ void loop() {
         for(uint8_t i=0; i<=9; i++){
           Serial.readBytes(bytes_read, 1);
           current_angle = (uint8_t) bytes_read[0];
-          servomotors[i].write((int)current_angle);
+          servomotors[i].write((int)current_angle+ offsets[i]);
           if(i%2==1){
             i+=2;
           }
@@ -112,7 +125,7 @@ void loop() {
         for(uint8_t i=2; i<=11; i++){
           Serial.readBytes(bytes_read, 1);
           current_angle = (uint8_t) bytes_read[0];
-          servomotors[i].write((int)current_angle);
+          servomotors[i].write((int)current_angle + offsets[i]);
           if(i%2==1){
             i+=2;
           }

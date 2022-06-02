@@ -15,7 +15,7 @@ if(leg_index==4 || leg_index==5 || leg_index==6)
             joints_traj(1:N_rounded, :) = jtraj(q_stable, [support_traj(N_rounded, 1) max_height_right], N_rounded);
             joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height_right], support_traj(1, :), ...
                 N_points/2-N_rounded);
-        case 'stabilize'
+        case 'stabilizing'
             joints_traj(1:N_rounded, :) = jtraj(support_traj(end, :), [support_traj(N_rounded, 1) max_height_right], N_rounded);
             joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height_right], q_stable, ...
                 N_points/2-N_rounded);
@@ -32,7 +32,7 @@ else
             joints_traj(1:N_rounded, :) = jtraj(q_stable, [support_traj(N_rounded, 1) max_height_left], N_rounded);
             joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height_left], support_traj(1, :), ...
                 N_points/2-N_rounded);
-        case 'stabilize'
+        case 'stabilizing'
             joints_traj(1:N_rounded, :) = jtraj(support_traj(end, :), [support_traj(N_rounded, 1) max_height_left], N_rounded);
             joints_traj(N_rounded+1:N_points/2, :) = jtraj([support_traj(N_rounded, 1) max_height_left], q_stable, ...
                 N_points/2-N_rounded);
@@ -41,12 +41,12 @@ else
     end
 end
 joints_traj = saturate_traj(joints_traj, 'deg', leg_index);
-figure
-plot( 1:length(joints_traj(:, 1)), joints_traj(:, 1));
-str = sprintf("%s leg %d motor A", traj_type, leg_index);
-title(str)
-figure
-plot( 1:length(joints_traj(:, 2)), joints_traj(:, 2));
-str = sprintf("%s leg %d motor B", traj_type, leg_index);
-title(str)
+% figure
+% plot( 1:length(joints_traj(:, 1)), joints_traj(:, 1));
+% str = sprintf("%s leg %d motor A", traj_type, leg_index);
+% title(str)
+% figure
+% plot( 1:length(joints_traj(:, 2)), joints_traj(:, 2));
+% str = sprintf("%s leg %d motor B", traj_type, leg_index);
+% title(str)
 end
