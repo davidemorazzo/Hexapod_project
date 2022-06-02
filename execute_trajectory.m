@@ -72,12 +72,12 @@ elseif(strcmp(state_group2, 'stabilizing') && strcmp(state_group1, 'execution'))
         positions_group1 = [traj_group1(i, :, 1) traj_group1(i, :, 2) traj_group1(i, :, 3)];
         arduino_servo_pos(serial_obj, positions_group1, 1);
     end
-elseif(strcmp(state_group1, 'none') && strcmp(state_group2, 'stable'))
+elseif(strcmp(state_group1, 'none') && strcmp(state_group2, 'stabilizing'))
     for i=1:N_points/2
         positions_group2 = [traj_group2(i, :, 1) traj_group2(i, :, 2) traj_group2(i, :, 3)];
         arduino_servo_pos(serial_obj, positions_group2, 2);
     end
-elseif(strcmp(state_group2, 'none') && strcmp(state_group1, 'stable'))
+elseif(strcmp(state_group2, 'none') && strcmp(state_group1, 'stabilizing'))
     for i=1:N_points/2
         positions_group1 = [traj_group1(i, :, 1) traj_group1(i, :, 2) traj_group1(i, :, 3)];
         arduino_servo_pos(serial_obj, positions_group1, 1);

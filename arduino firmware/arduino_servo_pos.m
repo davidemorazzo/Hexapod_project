@@ -9,6 +9,7 @@ function arduino_servo_pos(serial_obj, positions, leg_group)
     
     % Send command_id so arduino understand the following data. Command '1'
     % means servomotor positions
+    tic
     if(leg_group==1)
         serial_obj.write(1, 'uint8');
     elseif(leg_group==2)
@@ -21,5 +22,6 @@ function arduino_servo_pos(serial_obj, positions, leg_group)
         angle = uint8(positions(i));
         serial_obj.write(angle, 'char');
     end
-    pause(0.01)
+    t_effective = toc;
+    pause(0.01-t_effective)
 end

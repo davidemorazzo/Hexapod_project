@@ -1,7 +1,7 @@
 function [joints_traj] = create_joint_traj(support_traj, N_points, traj_type, leg_index)
 
-max_height_right = 180-23; % max height of motor b position, imposed to move in the air
-max_height_left = 23;
+max_height_right = 180-45; % max height of motor b position, imposed to move in the air
+max_height_left = 45;
 N_rounded = floor(N_points/4); % rounding to have an integer number of points
 q_stable = [90 90]'; % stable position of the joints, to configure
 
@@ -40,13 +40,13 @@ else
             joints_traj = [];
     end
 end
-% joints_traj = saturate_traj(joints_traj, 'deg', leg_index);
-% figure
-% plot( 1:length(joints_traj(:, 1)), joints_traj(:, 1));
-% str = sprintf("%s leg %d motor A", traj_type, leg_index);
-% title(str)
-% figure
-% plot( 1:length(joints_traj(:, 2)), joints_traj(:, 2));
-% str = sprintf("%s leg %d motor B", traj_type, leg_index);
-% title(str)
+joints_traj = saturate_traj(joints_traj, 'deg', leg_index);
+figure
+plot( 1:length(joints_traj(:, 1)), joints_traj(:, 1));
+str = sprintf("%s leg %d motor A", traj_type, leg_index);
+title(str)
+figure
+plot( 1:length(joints_traj(:, 2)), joints_traj(:, 2));
+str = sprintf("%s leg %d motor B", traj_type, leg_index);
+title(str)
 end

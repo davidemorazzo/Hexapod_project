@@ -11,7 +11,7 @@ o_1 = -3.1;
 o_2 = -2.25;
 delta_x = 2;
 delta_y = 6;
-% index = 6;
+% index = 1;
 
 prism_freedom = 2;
 
@@ -19,8 +19,8 @@ prism_freedom = 2;
 switch index
     case 1
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
-        leg1 = Revolute('a',l1,'alpha', pi-pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', 3/4*pi);
-        leg2 = Revolute('a',l2,'qlim', [0 pi]);
+        leg1 = Revolute('a',l1,'alpha', pi-pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', 3/4*pi+deg2rad(5));
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', -deg2rad(1));
         % Set base frame
         base_xyz = SE3();
         base_xyz.t = [-delta_x delta_y -o_1+l2-prism_freedom];
@@ -30,8 +30,8 @@ switch index
             'tool', SE3([0 o_2 0]'));
     case 2
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
-        leg1 = Revolute('a',l1,'alpha', pi-pi/2, 'd',-o_1, 'qlim', [0 pi], 'offset', pi/2);
-        leg2 = Revolute('a',l2,'qlim', [0 pi]);
+        leg1 = Revolute('a',l1,'alpha', pi-pi/2, 'd',-o_1, 'qlim', [0 pi], 'offset', pi/2+deg2rad(7));
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', deg2rad(3));
         % Set base frame
         base_xyz = SE3();
         base_xyz.t = [-delta_x 0 -o_1+l2-prism_freedom];
@@ -42,7 +42,7 @@ switch index
     case 3
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
         leg1 = Revolute('a',l1,'alpha', pi-pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', pi/4);
-        leg2 = Revolute('a',l2,'qlim', [0 pi]);
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', deg2rad(10));
         % Set base frame
         base_xyz = SE3();
         base_xyz.t = [-delta_x -delta_y -o_1+l2-prism_freedom];
@@ -53,7 +53,7 @@ switch index
     case 4
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
         leg1 = Revolute('a',l1,'alpha', -pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', pi/4+pi/2);
-        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi);
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi-deg2rad(5));
         % Set base frame
         base_xyz = SE3().Rz(pi);
         base_xyz.t = [delta_x -delta_y -o_1+l2-prism_freedom];
@@ -63,8 +63,8 @@ switch index
             'tool', SE3([0 -o_2 0]'));
     case 5
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
-        leg1 = Revolute('a',l1,'alpha', -pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', -pi/2);
-        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi);
+        leg1 = Revolute('a',l1,'alpha', -pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', -pi/2+deg2rad(10));
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi-deg2rad(10));
         % Set base frame
         base_xyz = SE3();
         base_xyz.t = [delta_x 0 -o_1+l2-prism_freedom];
@@ -75,7 +75,7 @@ switch index
     case 6
         base = Prismatic('qlim', [0 1], 'a', l0, 'alpha', pi);
         leg1 = Revolute('a',l1,'alpha', -pi/2, 'd', -o_1, 'qlim', [0 pi], 'offset', -pi/2-pi/4);
-        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi);
+        leg2 = Revolute('a',l2,'qlim', [0 pi], 'offset', pi+deg2rad(8));
         % Set base frame
         base_xyz = SE3();
         base_xyz.t = [delta_x delta_y -o_1+l2-prism_freedom];
@@ -87,6 +87,6 @@ switch index
         leg = SerialLink.empty;
 end
 
-% leg.plot([0 0 0])
+% leg.plot([0 pi/2 pi/2])
 % leg.fkine([0 pi/2 pi/2])
 end
