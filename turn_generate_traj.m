@@ -1,4 +1,4 @@
-function [step, theta_a] = turn(legs, group, rotation_angle)
+function [step, theta_a] = turn_generate_traj(legs, group, rotation_angle)
 
 q_stable = [2 pi/2 pi/2];
 stable_point = zeros(3, 3);
