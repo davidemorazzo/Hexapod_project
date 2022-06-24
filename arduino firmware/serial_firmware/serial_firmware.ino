@@ -1,10 +1,14 @@
 #include <Servo.h>
+#include <MPU6050_tockn.h>
+#include <Wire.h>
+
 //#define TRIG_PIN A2 
 //#define ECHO_PIN A3
 
 // Servomotors declaration
 Servo servomotors[12];
 Servo head_servo;
+MPU6050 mpu6050(Wire);
 int offsets[12];
 
 //void ESP8266_ATCOMMAND(){
@@ -56,6 +60,10 @@ void setup() {
   offsets[9] = 10;
   offsets[10] = 0;
   offsets[11] = -8;
+
+  Wire.begin();
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
   /*
   Setting   Divisor   Frequency
   0x01      1         31372.55
@@ -83,11 +91,11 @@ void setup() {
 
 uint8_t command_id;
 char bytes_read[1];
+byte bytes_write[4];
 uint8_t current_angle;
-float dc;
+float dc, angle_z[1];
 long duration;
 int distance;
-
 
 void loop() {
   /*
@@ -102,13 +110,10 @@ void loop() {
     // something to read
     //digitalWrite(13, HIGH);
     command_id = (uint8_t) Serial.read();
-//    Serial.println("Received:");  
-//    Serial.write(command_id);
 
     // commands options 1 -> move group 1, 2 -> move group 2, 3 -> ultrasonic measurements, 4 -> IMU measurements, 5 -> head position
     switch(int(command_id)){
       case 1:
-        
         // read motor positions group 1
         for(uint8_t i=0; i<=9; i++){
           Serial.readBytes(bytes_read, 1);
@@ -146,7 +151,11 @@ void loop() {
       break;
 
       case 4:
-        // write IMU measurements
+        mpu6050.update();
+        angle_z[0] = mpu6050.getAngleZ();
+        memcpy(bytes_write, angle_z, 4);
+        Serial.write(bytes_write, 4);
+        break;
       case 5:
         //head position
         Serial.readBytes(bytes_read, 1);

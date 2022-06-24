@@ -26,7 +26,7 @@ format compact
 %% Connection and setup
 
 load angle.mat
-com_port = 'COM15';
+com_port = 'COM11';
 serial_obj = serialport(com_port, 57600);
 serial_obj.configureTerminator("CR/LF")
 pause(1);
@@ -94,7 +94,7 @@ while true
         % ----- state walk_forward -----
         case 'walk_forward'
             step = 3; % step length
-            theta_a = -90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+            theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
             % Creation of trajectories
             for i=1:6
                 % inverse kinematics for each leg
@@ -116,7 +116,7 @@ while true
                 'positioning', 'none', N_points);
             execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
                 'execution', 'positioning', N_points);
-            for i=1:10
+            for i=1:20
                 execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
                     'return', 'execution', N_points);
                 execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
@@ -240,6 +240,7 @@ while true
         % ----- state steady --------------
         case 'steady'
         
+        case 'ultrasonic'
             
         % ----- Default case --------------
         otherwise
