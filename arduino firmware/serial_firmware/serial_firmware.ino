@@ -1,6 +1,16 @@
 #include <Servo.h>
-#include <MPU6050_tockn.h>
 #include <Wire.h>
+#include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
+
+#define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+
+Kalman kalmanX; // Create the Kalman instances
+Kalman kalmanY;
+uint32_t timer;
+uint8_t i2cData[14]; // Buffer for I2C data
+double accX, accY, accZ;
+double gyroX, gyroY, gyroZ;
+double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
 //#define TRIG_PIN A2 
 //#define ECHO_PIN A3
@@ -8,7 +18,6 @@
 // Servomotors declaration
 Servo servomotors[12];
 Servo head_servo;
-MPU6050 mpu6050(Wire);
 int offsets[12];
 
 //void ESP8266_ATCOMMAND(){
@@ -61,9 +70,42 @@ void setup() {
   offsets[10] = 0;
   offsets[11] = -8;
 
-  Wire.begin();
-  mpu6050.begin();
-  mpu6050.calcGyroOffsets(true);
+  // Kalman filter initialization
+  
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // Set I2C frequency to 400kHz
+
+  i2cData[0] = 7; // Set the sample rate to 1000Hz - 8kHz/(7+1) = 1000Hz
+  i2cData[1] = 0x00; // Disable FSYNC and set 260 Hz Acc filtering, 256 Hz Gyro filtering, 8 KHz sampling
+  i2cData[2] = 0x00; // Set Gyro Full Scale Range to ±250deg/s
+  i2cData[3] = 0x00; // Set Accelerometer Full Scale Range to ±2g
+  while (i2cWrite(0x19, i2cData, 4, false)); // Write to all four registers at once
+  while (i2cWrite(0x6B, 0x01, true)); // PLL with X axis gyroscope reference and disable sleep mode
+
+  while (i2cRead(0x75, i2cData, 1));
+  if (i2cData[0] != 0x68) { // Read "WHO_AM_I" register
+    Serial.print(F("Error reading sensor"));
+    while (1);
+  }
+
+  delay(100); // Wait for sensor to stabilize
+
+  /* Set kalman and gyro starting angle */
+  while (i2cRead(0x3B, i2cData, 6));
+  accX = (i2cData[0] << 8) | i2cData[1];
+  accY = (i2cData[2] << 8) | i2cData[3];
+  accZ = (i2cData[4] << 8) | i2cData[5];
+
+  // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
+  // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
+  // It is then converted from radians to degrees
+
+  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
+  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
+
+  kalmanX.setAngle(roll); // Set starting angle
+  kalmanY.setAngle(pitch);
+
+  timer = micros();
   /*
   Setting   Divisor   Frequency
   0x01      1         31372.55
@@ -75,10 +117,6 @@ void setup() {
   0x07      1024      30.64
   */
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
-
-  /* Setup Ultrasonic sensor HC-SR04 */
-//  pinMode(TRIG_PIN, OUTPUT);
-//  pinMode(ECHO_PIN, INPUT);
   
   // begin serial
   Serial.begin(57600);
@@ -151,9 +189,9 @@ void loop() {
       break;
 
       case 4:
-        mpu6050.update();
-        angle_z[0] = mpu6050.getAngleZ();
-        memcpy(bytes_write, angle_z, 4);
+        memcpy(bytes_write, &kalAngleX, 4);
+        Serial.write(bytes_write, 4);
+        memcpy(bytes_write, &kalAngleY, 4);
         Serial.write(bytes_write, 4);
         break;
       case 5:
@@ -162,11 +200,34 @@ void loop() {
         current_angle = (uint8_t) bytes_read[0];
         dc = map(current_angle, 0, 180, 30, 160);
         analogWrite(3, dc);
+        break;
       // Default case
       default:
       break;
     }
   }
-  
+  while (i2cRead(0x3B, i2cData, 14));
+  accX = ((i2cData[0] << 8) | i2cData[1]);
+  accY = ((i2cData[2] << 8) | i2cData[3]);
+  accZ = ((i2cData[4] << 8) | i2cData[5]);
+  gyroX = (i2cData[8] << 8) | i2cData[9];
+  gyroY = (i2cData[10] << 8) | i2cData[11];
+  gyroZ = (i2cData[12] << 8) | i2cData[13];
 
+  double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
+  timer = micros();
+  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
+  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
+  double gyroXrate = gyroX / 131.0; // Convert to deg/s
+  double gyroYrate = gyroY / 131.0; // Convert to deg/s
+  if ((pitch < -90 && kalAngleY > 90) || (pitch > 90 && kalAngleY < -90)) {
+    kalmanY.setAngle(pitch);
+    kalAngleY = pitch;
+  }else{
+    kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+  }
+  if (abs(kalAngleY) > 90){
+    gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
+  }
+  kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
 }
