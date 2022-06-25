@@ -20,24 +20,21 @@ Servo servomotors[12];
 Servo head_servo;
 int offsets[12];
 
-//void ESP8266_ATCOMMAND(){
-//   Serial.begin(115200);       // set up a wifi serial communication baud rate 115200
-//   pinMode(controller, OUTPUT);    // sets the RelayPin to be an output
-//   Serial.println("AT+CWMODE=3\r\n");//set to softAP+station mode
-//   delay(2000);     //delay 4s
-//   
-//   Serial.println("AT+CWSAP=\"Adeept_ESP\",\"12345678\",8,2\r\n");   //TCP Protocol, server IP addr, port
-//    delay(2000);     //delay 4s
-//   Serial.println("AT+RST\r\n");     //reset wifi
-//   delay(2000);     //delay 4s
-//
-//   Serial.println("AT+CIPMUX=1\r\n");
-//   delay(2000);
-//   Serial.println("AT+CIPSERVER=1,8080\r\n");
-//   delay(2000);
+void ESP8266_ATCOMMAND(){
+   Serial.println("AT+RST");     //reset wifi
+   delay(1000);     //delay 4s
+   Serial.println("AT+CWMODE=2");//set to softAP+station mode
+   delay(1000);     //delay 4s 
+   Serial.println("AT+CWSAP=Adeept_ESP,12345678,8,2");   //TCP Protocol, server IP addr, port
+   delay(1000);     //delay 4s
+   Serial.println("AT+CIPMUX=1");
+   delay(1000);
+   Serial.println("AT+CIPSERVER=1,80");
+   delay(1000);
 //   Serial.println("AT+CIPSTO=7000\r\n");
 //   delay(2000);
-//}
+}
+
 
 
 void setup() {
@@ -57,6 +54,8 @@ void setup() {
   servomotors[10].attach(9); //s61
   servomotors[11].attach(8); //s62
   pinMode(3, OUTPUT); // head
+
+  // Motor offsets
   offsets[0] = -5; 
   offsets[1] = 1;
   offsets[2] = -7;
@@ -119,115 +118,139 @@ void setup() {
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
   
   // begin serial
-  Serial.begin(57600);
-  //ESP8266_ATCOMMAND();
+  Serial.begin(115200);
+  ESP8266_ATCOMMAND();
   // wait serial to connect
   Serial.flush();
   while(!Serial){}
-  Serial.println("Arduino Connected");
+//  Serial.print("AT+CIPSEND=0,17\r\n");
+//  Serial.print("Arduino Connected\r\n");
 }
 
-uint8_t command_id;
+uint8_t command_id, data_buf[10];
 char bytes_read[1];
 byte bytes_write[4];
 uint8_t current_angle;
 float dc, angle_z[1];
 long duration;
-int distance;
+int distance, packet_idx, data_idx;
+String packet_str;
 
 void loop() {
-  /*
-  Serial commands
-  1 -> read and implement servomotors positions
-  2 -> write ultrasonic measurement
-  3 -> write IMU measurements
-  4 -> head position
-  */
-  
+ 
   if(Serial.available() > 0){
-    // something to read
-    //digitalWrite(13, HIGH);
-    command_id = (uint8_t) Serial.read();
+    int valid_data=0;
+    int data_len=0;
+    command_id=0;
 
-    // commands options 1 -> move group 1, 2 -> move group 2, 3 -> ultrasonic measurements, 4 -> IMU measurements, 5 -> head position
-    switch(int(command_id)){
-      case 1:
-        // read motor positions group 1
-        for(uint8_t i=0; i<=9; i++){
-          Serial.readBytes(bytes_read, 1);
-          current_angle = (uint8_t) bytes_read[0];
-          servomotors[i].write((int)current_angle+ offsets[i]);
-          if(i%2==1){
-            i+=2;
-          }
-        }
-      break;
+    packet_str = Serial.readStringUntil('\n');
+    
+    /* Parsing TCP string
+    +IPD,0,2:Z*/
+    packet_idx = packet_str.indexOf("+IPD");
+    if(packet_idx!=-1){
       
-      case 2:
-        // read motor positions group 2
-        for(uint8_t i=2; i<=11; i++){
-          Serial.readBytes(bytes_read, 1);
-          current_angle = (uint8_t) bytes_read[0];
-          servomotors[i].write((int)current_angle + offsets[i]);
-          if(i%2==1){
-            i+=2;
-          }
-        }  
-      break;
-
-      case 3:
-        // write ultrasonic measurement
-//        digitalWrite(TRIG_PIN, LOW);
-//        delayMicroseconds(2);
-//        digitalWrite(TRIG_PIN, HIGH);
-//        delayMicroseconds(10);
-//        digitalWrite(TRIG_PIN, LOW);
-//        duration = pulseIn(ECHO_PIN, HIGH);
-//        distance = duration * 0.034/2;
-        // Write on Serial port
-        //Serial.write()
-      break;
-
-      case 4:
-        memcpy(bytes_write, &kalAngleX, 4);
-        Serial.write(bytes_write, 4);
-        memcpy(bytes_write, &kalAngleY, 4);
-        Serial.write(bytes_write, 4);
-        break;
-      case 5:
-        //head position
-        Serial.readBytes(bytes_read, 1);
-        current_angle = (uint8_t) bytes_read[0];
-        dc = map(current_angle, 0, 180, 30, 160);
-        analogWrite(3, dc);
-        break;
-      // Default case
-      default:
-      break;
+      data_len=packet_str[packet_idx+7]-48;
+      command_id=packet_str[packet_idx+9];
+      
+      for(int i=0; i<=data_len-1; i++){
+        data_buf[i] = packet_str[10+i];
+        valid_data=1;
+      }        
     }
-  }
-  while (i2cRead(0x3B, i2cData, 14));
-  accX = ((i2cData[0] << 8) | i2cData[1]);
-  accY = ((i2cData[2] << 8) | i2cData[3]);
-  accZ = ((i2cData[4] << 8) | i2cData[5]);
-  gyroX = (i2cData[8] << 8) | i2cData[9];
-  gyroY = (i2cData[10] << 8) | i2cData[11];
-  gyroZ = (i2cData[12] << 8) | i2cData[13];
 
-  double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
-  timer = micros();
-  double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
-  double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
-  double gyroXrate = gyroX / 131.0; // Convert to deg/s
-  double gyroYrate = gyroY / 131.0; // Convert to deg/s
-  if ((pitch < -90 && kalAngleY > 90) || (pitch > 90 && kalAngleY < -90)) {
-    kalmanY.setAngle(pitch);
-    kalAngleY = pitch;
-  }else{
-    kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
-  }
-  if (abs(kalAngleY) > 90){
-    gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
-  }
-  kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
+    if(valid_data){
+      /* commands options 
+      1 -> move group 1, 
+      2 -> move group 2, 
+      3 -> ultrasonic measurements, 
+      4 -> IMU measurements, 
+      5 -> head position 
+      */
+      switch(int(command_id)){
+        case 1:
+          /* read motor positions group 1 */
+          data_idx=0;
+          for(uint8_t i=0; i<=9; i++){
+            current_angle = (uint8_t) data_buf[data_idx];
+            data_idx++;
+            servomotors[i].write((int)current_angle+ offsets[i]);
+            if(i%2==1){
+              i+=2;
+            }
+          }
+        break;
+        
+        case 2:
+          /* read motor positions group 2 */
+          data_idx=0;
+          for(uint8_t i=2; i<=11; i++){
+            current_angle = (uint8_t) data_buf[i];
+            data_idx++;
+            servomotors[i].write((int)current_angle + offsets[i]);
+            if(i%2==1){
+              i+=2;
+            }
+          }  
+        break;
+  
+        case 3:
+          // write ultrasonic measurement
+  //        digitalWrite(TRIG_PIN, LOW);
+  //        delayMicroseconds(2);
+  //        digitalWrite(TRIG_PIN, HIGH);
+  //        delayMicroseconds(10);
+  //        digitalWrite(TRIG_PIN, LOW);
+  //        duration = pulseIn(ECHO_PIN, HIGH);
+  //        distance = duration * 0.034/2;
+          // Write on Serial port
+          //Serial.write()
+        break;
+  
+        case 4:
+          /* write IMU measurements */
+          memcpy(bytes_write, &kalAngleX, 4);
+          Serial.write(bytes_write, 4);
+          memcpy(bytes_write, &kalAngleY, 4);
+          Serial.write(bytes_write, 4);
+        break;
+        
+        case 5:
+          /* head position */
+          current_angle = (uint8_t) data_buf[0];
+          Serial.print(current_angle);
+          dc = map(current_angle, 0, 180, 30, 160);
+          analogWrite(3, dc);
+        break;
+        
+        default:
+          /* Default case */ 
+        break;
+      }
+    
+    }
+    while (i2cRead(0x3B, i2cData, 14));
+    accX = ((i2cData[0] << 8) | i2cData[1]);
+    accY = ((i2cData[2] << 8) | i2cData[3]);
+    accZ = ((i2cData[4] << 8) | i2cData[5]);
+    gyroX = (i2cData[8] << 8) | i2cData[9];
+    gyroY = (i2cData[10] << 8) | i2cData[11];
+    gyroZ = (i2cData[12] << 8) | i2cData[13];
+
+    double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
+    timer = micros();
+    double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
+    double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
+    double gyroXrate = gyroX / 131.0; // Convert to deg/s
+    double gyroYrate = gyroY / 131.0; // Convert to deg/s
+    if ((pitch < -90 && kalAngleY > 90) || (pitch > 90 && kalAngleY < -90)) {
+      kalmanY.setAngle(pitch);
+      kalAngleY = pitch;
+    }else{
+      kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+    }
+    if (abs(kalAngleY) > 90){
+      gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
+    }
+    kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
 }
