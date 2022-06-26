@@ -23,7 +23,8 @@ byte bytes_write[4];
 uint8_t current_angle;
 float dc, angle_z[1];
 long duration;
-int distance, packet_idx, data_idx;
+double distance;
+int packet_idx, data_idx;
 String packet_str;
 Servo servomotors[12];
 Servo head_servo;
@@ -198,9 +199,11 @@ void loop() {
           delayMicroseconds(10);
           digitalWrite(trigPin, LOW);
           duration = pulseIn(echoPin, HIGH);
-          distance = duration * 0.034/2;
-           Write on Serial port
-          Serial.write()
+          distance = duration * 0.034/2;//send out only distance
+          memcpy(bytes_write, &distance, 4);
+          Serial.println("AT+CIPSEND=0,4");
+          Serial.write(bytes_write, 4);
+          Serial.print("\r\n");
         break;
   
         case 4:
