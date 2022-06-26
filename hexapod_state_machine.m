@@ -27,11 +27,10 @@ format compact
 
 load angle.mat
 com_port = 'COM15';
-serial_obj = serialport(com_port, 57600);
-serial_obj.configureTerminator("CR/LF")
+connection = tcpclient('192.168.4.1', 80);
 pause(1);
-arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
-arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
+arduino_servo_pos(connection, 90*ones(6, 1), 1);
+arduino_servo_pos(connection, 90*ones(6, 1), 2);
 
 %% Robot's leg creation (simulation)
 close all
@@ -98,7 +97,7 @@ while true
             theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
             N_routines = 5; % number of moving routines to be executed
             N_points = 16; % number of points in the trajectory discretization
-            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+            move_linear(legs, connection, step, theta_a, N_routines, N_points);
             next_state = 'wait_for_input'; % Next state evaluation
         
         % ----- State walk_backward -------
@@ -108,7 +107,7 @@ while true
             theta_a = 180;
             N_routines = 5;
             N_points = 16;
-            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+            move_linear(legs, connection, step, theta_a, N_routines, N_points);
             next_state = 'wait_for_input';
         
         % ----- State rotate_left ---------
@@ -131,19 +130,19 @@ while true
                 tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
 %                 pause
             end
-            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
+            execute_trajectory(connection, tj_positioning(:, :, group1), [], ...
                 'positioning', 'none', N_points);
-            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
+            execute_trajectory(connection, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
                 'execution', 'positioning', N_points);
             for i=1:2
-                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
+                execute_trajectory(connection, tj_return(:, :, group1), tj_support(:, :, group2), ...
                     'return', 'execution', N_points);
-                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
+                execute_trajectory(connection, tj_support(:, :, group1), tj_return(:, :, group2), ...
                     'execution', 'return', N_points);
             end
-            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
+            execute_trajectory(connection, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
                 'stabilizing', 'execution', N_points);
-            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
+            execute_trajectory(connection, [], tj_stabilize(:, :, group2), ...
                 'none', 'stabilizing', N_points);
         next_state = 'wait_for_input';
 
@@ -167,19 +166,19 @@ while true
                 tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
 %                 pause
             end
-            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
+            execute_trajectory(connection, tj_positioning(:, :, group1), [], ...
                 'positioning', 'none', N_points);
-            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
+            execute_trajectory(connection, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
                 'execution', 'positioning', N_points);
             for i=1:2
-                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
+                execute_trajectory(connection, tj_return(:, :, group1), tj_support(:, :, group2), ...
                     'return', 'execution', N_points);
-                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
+                execute_trajectory(connection, tj_support(:, :, group1), tj_return(:, :, group2), ...
                     'execution', 'return', N_points);
             end
-            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
+            execute_trajectory(connection, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
                 'stabilizing', 'execution', N_points);
-            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
+            execute_trajectory(connection, [], tj_stabilize(:, :, group2), ...
                 'none', 'stabilizing', N_points);
         next_state = 'wait_for_input';
 
@@ -191,7 +190,7 @@ while true
 
         case 'ultrasonic'
             
-        map_the_surroundings(serial_obj)
+        map_the_surroundings(connection)
         next_state = 'wait_for_input';
 
         otherwise
