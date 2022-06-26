@@ -5,6 +5,7 @@
 
 #define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
 
+
 Kalman kalmanX; // Create the Kalman instances
 Kalman kalmanY;
 uint32_t timer;
@@ -12,6 +13,9 @@ uint8_t i2cData[14]; // Buffer for I2C data
 double accX, accY, accZ;
 double gyroX, gyroY, gyroZ;
 double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
+const int pingPin = A3;  // pin connected to Echo Pin in the ultrasonic distance sensor
+const int echoPin = A2;  // pin connected to trig Pin in the ultrasonic distance sensor
+
 
 uint8_t command_id, data_buf[10];
 char bytes_read[1];
@@ -56,6 +60,12 @@ void setup() {
   servomotors[10].attach(9); //s61
   servomotors[11].attach(8); //s62
   pinMode(3, OUTPUT); // head
+
+   //Setting pin for ultrasonic read
+
+  pinMode(trigPin,OUTPUT)//trigger pin is the output
+  pinMode(echoPin,INPUT)//echo pin is the input
+  digitalWrite(trigPin,LOW)//inizialization
 
   // Motor offsets
   offsets[0] = -5; 
@@ -113,6 +123,8 @@ void setup() {
   0x07      1024      30.64
   */
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
+
+ 
   
   Serial.begin(115200);
   ESP8266_ATCOMMAND();
@@ -181,16 +193,14 @@ void loop() {
         break;
   
         case 3:
-          // write ultrasonic measurement
-  //        digitalWrite(TRIG_PIN, LOW);
-  //        delayMicroseconds(2);
-  //        digitalWrite(TRIG_PIN, HIGH);
-  //        delayMicroseconds(10);
-  //        digitalWrite(TRIG_PIN, LOW);
-  //        duration = pulseIn(ECHO_PIN, HIGH);
-  //        distance = duration * 0.034/2;
-          // Write on Serial port
-          //Serial.write()
+           //write ultrasonic measurement
+          digitalWrite(trigPin, HIGH);
+          delayMicroseconds(10);
+          digitalWrite(trigPin, LOW);
+          duration = pulseIn(echoPin, HIGH);
+          distance = duration * 0.034/2;
+           Write on Serial port
+          Serial.write()
         break;
   
         case 4:

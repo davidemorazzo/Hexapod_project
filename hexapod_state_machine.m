@@ -191,7 +191,8 @@ while true
 
         case 'ultrasonic'
             
-        % ----- Default case --------------
+        map_the_surroundings(serial_obj)
+        next_state = 'wait_for_input';
 
         otherwise
             next_state = 'wait_for_input';
