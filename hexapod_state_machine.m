@@ -30,6 +30,7 @@ com_port = 'COM15';
 serial_obj = serialport(com_port, 57600);
 serial_obj.configureTerminator("CR/LF")
 pause(1);
+serial_obj.readline()
 arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
 arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
 
@@ -189,6 +190,31 @@ while true
         
         % ----- State read ultrasonic -------
 
+        arduino_servo_pos(serial_obj,[45 90 135 90 90 90], 1);
+        arduino_servo_pos(serial_obj, [90 90 45 90 135 90], 2);
+        l1 = 3.75;
+        base = 8.7;
+        tool_off = 2.25;
+        l2 = 6.05;
+        a = 2*l1+base+tool_off;
+        while(1)
+            [angleX, angleY] = arduino_read_angle(serial_obj);
+            if(angleX<=1)
+                angleX
+            end
+            if(angleX>1)
+                arg = (l2-a*sind(angleX))/l2;
+                q = acosd(arg)
+                arduino_servo_pos(serial_obj, [45 90-q 135 90-q 90 90], 1)
+                arduino_servo_pos(serial_obj, [90 90-q 45 90 135 90], 2);
+            end
+%             else
+%                 arduino_servo_pos(serial_obj, [45 90 135 90 90 90+q], 1)
+%                 arduino_servo_pos(serial_obj, [90 90 45 90+q 135 90+q], 2);
+%             end
+            pause(0.01)
+        end
+        next_state = 'wait_for_input';
         case 'ultrasonic'
             
         % ----- Default case --------------

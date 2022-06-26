@@ -6,7 +6,8 @@ pause(1)
 serial_obj.readline()
 pause(1)
 while(1)
-    [angleX angleY] = arduino_read_angle(serial_obj)
+    [angleX angleY] = arduino_read_angle(serial_obj);
+    angleX
     pause(0.5)
 end
 clear
