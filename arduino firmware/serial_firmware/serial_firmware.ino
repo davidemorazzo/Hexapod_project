@@ -1,6 +1,7 @@
 #include <Servo.h>
 #include <Wire.h>
 #include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
+#include "I2C.h"
 
 #define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
 
@@ -12,29 +13,32 @@ double accX, accY, accZ;
 double gyroX, gyroY, gyroZ;
 double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
-//#define TRIG_PIN A2 
-//#define ECHO_PIN A3
-
-// Servomotors declaration
+uint8_t command_id, data_buf[10];
+char bytes_read[1];
+byte bytes_write[4];
+uint8_t current_angle;
+float dc, angle_z[1];
+long duration;
+int distance, packet_idx, data_idx;
+String packet_str;
 Servo servomotors[12];
 Servo head_servo;
 int offsets[12];
 
+
 void ESP8266_ATCOMMAND(){
+  /* ESP-01s initialization */ 
    Serial.println("AT+RST");     //reset wifi
-   delay(1000);     //delay 4s
+   delay(1000);
    Serial.println("AT+CWMODE=2");//set to softAP+station mode
-   delay(1000);     //delay 4s 
+   delay(1000);
    Serial.println("AT+CWSAP=Adeept_ESP,12345678,8,2");   //TCP Protocol, server IP addr, port
-   delay(1000);     //delay 4s
+   delay(1000);
    Serial.println("AT+CIPMUX=1");
    delay(1000);
    Serial.println("AT+CIPSERVER=1,80");
    delay(1000);
-//   Serial.println("AT+CIPSTO=7000\r\n");
-//   delay(2000);
 }
-
 
 
 void setup() {
@@ -46,8 +50,6 @@ void setup() {
   servomotors[4].attach(7); //s31
   servomotors[5].attach(6); //s32
   servomotors[6].attach(13); //s41
-//  pinMode(13, OUTPUT);
-//  digitalWrite(13, LOW);
   servomotors[7].attach(12); //s42
   servomotors[8].attach(11); //s51
   servomotors[9].attach(10); //s52
@@ -85,7 +87,6 @@ void setup() {
     Serial.print(F("Error reading sensor"));
     while (1);
   }
-
   delay(100); // Wait for sensor to stabilize
 
   /* Set kalman and gyro starting angle */
@@ -93,10 +94,6 @@ void setup() {
   accX = (i2cData[0] << 8) | i2cData[1];
   accY = (i2cData[2] << 8) | i2cData[3];
   accZ = (i2cData[4] << 8) | i2cData[5];
-
-  // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
-  // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
-  // It is then converted from radians to degrees
 
   double roll  = atan(accY / sqrt(accX * accX + accZ * accZ)) * RAD_TO_DEG;
   double pitch = atan2(-accX, accZ) * RAD_TO_DEG;
@@ -117,27 +114,16 @@ void setup() {
   */
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
   
-  // begin serial
   Serial.begin(115200);
   ESP8266_ATCOMMAND();
-  // wait serial to connect
   Serial.flush();
-  while(!Serial){}
-//  Serial.print("AT+CIPSEND=0,17\r\n");
-//  Serial.print("Arduino Connected\r\n");
+  while(!Serial){} // wait serial to connect
 }
 
-uint8_t command_id, data_buf[10];
-char bytes_read[1];
-byte bytes_write[4];
-uint8_t current_angle;
-float dc, angle_z[1];
-long duration;
-int distance, packet_idx, data_idx;
-String packet_str;
+
+
 
 void loop() {
- 
   if(Serial.available() > 0){
     int valid_data=0;
     int data_len=0;
@@ -209,16 +195,21 @@ void loop() {
   
         case 4:
           /* write IMU measurements */
+          /* TCP packet for X angle */
           memcpy(bytes_write, &kalAngleX, 4);
+          Serial.println("AT+CIPSEND=0,4");
           Serial.write(bytes_write, 4);
+          Serial.print("\r\n");
+          /* TCP packet for Y angle */
           memcpy(bytes_write, &kalAngleY, 4);
+          Serial.println("AT+CIPSEND=0,4");
           Serial.write(bytes_write, 4);
+          Serial.print("\r\n");
         break;
         
         case 5:
           /* head position */
           current_angle = (uint8_t) data_buf[0];
-          Serial.print(current_angle);
           dc = map(current_angle, 0, 180, 30, 160);
           analogWrite(3, dc);
         break;
@@ -253,4 +244,5 @@ void loop() {
       gyroXrate = -gyroXrate; // Invert rate, so it fits the restriced accelerometer reading
     }
     kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt); // Calculate the angle using a Kalman filter
+  }
 }
