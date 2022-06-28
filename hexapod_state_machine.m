@@ -75,7 +75,9 @@ while true
                 "\n2 -> Walk backward" + ...
                 "\n3 -> Rotate right" + ...
                 "\n4 -> Rotate left" + ...
-                "\n5 -> Steady\n");
+                "\n5 -> Steady\n" + ...
+                "\n6 -> Ultrasonic" + ...
+                "\n7 -> Avoid obstacle");
             user_input = int8(user_input);
             switch user_input
                 case 1
@@ -88,6 +90,11 @@ while true
                     next_state = 'rotate_left';
                 case 5
                     next_state = 'steady';
+                case 6
+                    next_state='ultrasonic';
+                case 7
+                    next_state='avoid_obstacle';
+                
                 otherwise
                     next_state = 'wait_for_input';
             end
@@ -95,6 +102,7 @@ while true
         % ----- State walk_forward -----
         
         case 'walk_forward'
+
             step = 3; % step length
             theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
             N_routines = 5; % number of moving routines to be executed
@@ -215,10 +223,42 @@ while true
             pause(0.01)
         end
         next_state = 'wait_for_input';
+        
         case 'ultrasonic'
-            
-        % ----- Default case --------------
+            map_the_surroundings(serial_obj);
+        
+            next_state = 'wait_for_input';
+        case 'avoid_obstacle'
+            arduino_head_pos(serial_obj,90);
+            while(1)
 
+            distance=arduino_ultrasonic(serial_obj);
+            step = 3; % step length
+            N_routines = 3; % number of moving routines to be executed
+            N_points = 16; % number of points in the trajectory discretization
+            if distance>25
+
+            
+            theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+           
+            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+
+            else
+
+            theta_a = 90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+           
+            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+
+
+
+            end
+
+
+            end
+
+
+
+            next_state = 'wait_for_input';
         otherwise
             next_state = 'wait_for_input';
         

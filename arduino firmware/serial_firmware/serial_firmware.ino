@@ -11,6 +11,11 @@ uint8_t i2cData[14]; // Buffer for I2C data
 double accX, accY, accZ;
 double gyroX, gyroY, gyroZ;
 double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
+const int trigPin = A3;  // pin connected to Echo Pin in the ultrasonic distance sensor
+const int echoPin = A2;  // pin connected to trig Pin in the ultrasonic distance sensor
+
+
+
 
 //#define TRIG_PIN A2 
 //#define ECHO_PIN A3
@@ -105,6 +110,10 @@ void setup() {
   kalmanX.setAngle(roll); // Set starting angle
   kalmanY.setAngle(pitch);
 
+  pinMode(trigPin,OUTPUT);//trigger pin is the output
+  pinMode(echoPin,INPUT);//echo pin is the input
+  digitalWrite(trigPin,LOW);//inizialization
+
   timer = micros();
   /*
   Setting   Divisor   Frequency
@@ -133,7 +142,7 @@ byte bytes_write[4];
 uint8_t current_angle;
 float dc, angle_z[1];
 long duration;
-int distance;
+double distance;
 
 void loop() {
   /*
@@ -176,16 +185,16 @@ void loop() {
       break;
 
       case 3:
-        // write ultrasonic measurement
-//        digitalWrite(TRIG_PIN, LOW);
-//        delayMicroseconds(2);
-//        digitalWrite(TRIG_PIN, HIGH);
-//        delayMicroseconds(10);
-//        digitalWrite(TRIG_PIN, LOW);
-//        duration = pulseIn(ECHO_PIN, HIGH);
-//        distance = duration * 0.034/2;
-        // Write on Serial port
-        //Serial.write()
+          //write ultrasonic measurement
+          digitalWrite(trigPin, HIGH);
+          delayMicroseconds(10);
+          digitalWrite(trigPin, LOW);
+          duration = pulseIn(echoPin, HIGH);
+          distance = duration * 0.034/2;//send out only distance
+          memcpy(bytes_write, &distance, 4);
+          
+          Serial.write(bytes_write, 4);
+          
       break;
 
       case 4:

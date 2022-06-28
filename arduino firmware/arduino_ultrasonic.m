@@ -1,6 +1,6 @@
 function [distance]=arduino_ultrasonic(serial_obj)
         
-        serial_obj.write(4,"uint8");
+        serial_obj.write(3,"uint8");
 
         
 
