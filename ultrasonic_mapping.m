@@ -2,13 +2,8 @@ clc
 clear all 
 close all
 
-%% Create the Arduino object
 
 
-%% Create an ultrasonic sensor object with trigger pin D12 and echo pin D13.
-%  Create a servo object for the servo connected to pin D3. 
-sensor = ultrasonic(a,'D12', 'D13');%Create un ultraasonic sensor, with pins to be checked depending on your board
-servo_motor = servo(a, 'D3');%Create a servo_motor object, with pin to be verified(IT MUST BE THE MOTOR ON THE HEAD)
 
 %% Rotate the servo motor from 0 to 180 degrees.
 %  Every time the motor rotates, determine the distance of any obstacles
@@ -16,7 +11,7 @@ servo_motor = servo(a, 'D3');%Create a servo_motor object, with pin to be verifi
 %  and average them for accuracy. Record the angle and the distance (in cm)
 i = 1;
 table = zeros(180,2);
-for theta = 0 : 180
+for theta = 1 : 180
     arduino_head_pos(serial_obj,theta);
     dist1 = arduino_ultrasonic(serial_obj)%write position of the motor and read distance twice in order to create a 
     %more accurate mapping of the surroundings
@@ -31,7 +26,7 @@ end
 %  table with the average of the clockwise and counterclockwise scans to
 %  improve the accuracy of the map.
 j = 1; %here you do the same thing but rotating in the other direction
-for theta = 180 : -1 : 0
+for theta = 180 : -1 : 1
     arduino_head_pos(serial_obj,theta);
     dist1 = arduino_ultrasonic(serial_obj)
     pause(.04);
