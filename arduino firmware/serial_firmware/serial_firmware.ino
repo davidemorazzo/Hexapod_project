@@ -47,6 +47,10 @@ void ESP8266_ATCOMMAND(){
 
 
 void setup() {
+  Serial.begin(115200);
+  ESP8266_ATCOMMAND();
+  Serial.flush();
+  while(!Serial){} // wait serial to connect
   // Attach servomotors to the correct pin
   servomotors[0].attach(A0); //s11
   servomotors[1].attach(2); //s12
@@ -64,9 +68,9 @@ void setup() {
 
    //Setting pin for ultrasonic read
 
-  pinMode(trigPin,OUTPUT)//trigger pin is the output
-  pinMode(echoPin,INPUT)//echo pin is the input
-  digitalWrite(trigPin,LOW)//inizialization
+//  pinMode(trigPin,OUTPUT)//trigger pin is the output
+//  pinMode(echoPin,INPUT)//echo pin is the input
+//  digitalWrite(trigPin,LOW)//inizialization
 
   // Motor offsets
   offsets[0] = -5; 
@@ -124,13 +128,6 @@ void setup() {
   0x07      1024      30.64
   */
   TCCR2B = TCCR2B & 0b11111000 | 0x05;
-
- 
-  
-  Serial.begin(115200);
-  ESP8266_ATCOMMAND();
-  Serial.flush();
-  while(!Serial){} // wait serial to connect
 }
 
 
@@ -143,7 +140,7 @@ void loop() {
     command_id=0;
 
     packet_str = Serial.readStringUntil('\n');
-    
+    // Serial.print(packet_str);
     /* Parsing TCP string
     +IPD,0,2:Z*/
     packet_idx = packet_str.indexOf("+IPD");
@@ -151,7 +148,8 @@ void loop() {
       
       data_len=packet_str[packet_idx+7]-48;
       command_id=packet_str[packet_idx+9];
-      
+      Serial.print(command_id);
+      Serial.print(data_len);
       for(int i=0; i<=data_len-1; i++){
         data_buf[i] = packet_str[10+i];
         valid_data=1;
@@ -170,8 +168,12 @@ void loop() {
         case 1:
           /* read motor positions group 1 */
           data_idx=0;
+          Serial.println("AT+CIPSEND=0,6");
+          Serial.write(data_buf, 6);
+          Serial.println("");
           for(uint8_t i=0; i<=9; i++){
             current_angle = (uint8_t) data_buf[data_idx];
+            //Serial.print(current_angle);
             data_idx++;
             servomotors[i].write((int)current_angle+ offsets[i]);
             if(i%2==1){

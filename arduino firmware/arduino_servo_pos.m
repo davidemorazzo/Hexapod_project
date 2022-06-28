@@ -1,4 +1,4 @@
-function arduino_servo_pos(serial_obj, positions, leg_group)
+function arduino_servo_pos(connection, positions, leg_group)
     % - serial_obj: serial object representing the connection
     % - positions:  vector with length=12 representing the servo positions.
     %               The order is [s1_1, s1_2, s2_1, s2_2, ...]
@@ -10,17 +10,20 @@ function arduino_servo_pos(serial_obj, positions, leg_group)
     % Send command_id so arduino understand the following data. Command '1'
     % means servomotor positions
     tic
-    if(leg_group==1)
-        serial_obj.write(1, 'uint8');
-    elseif(leg_group==2)
-        serial_obj.write(2, 'uint8');
-    end
-%     line = serial_obj.readline()
-%     command = serial_obj.read(1, 'int8')
-    % Write on the serial each angle in order as a byte.
-    for i=1:6
-        angle = uint8(positions(i));
-        serial_obj.write(angle, 'char');
+    [sz1, sz2] = size(positions);
+    
+    if(sz2==1)
+        if(leg_group==1)
+            connection.write([1 positions'], 'uint8');
+        elseif(leg_group==2)
+            connection.write([2 positions'], 'uint8');
+        end
+    else
+        if(leg_group==1)
+            connection.write([1 positions], 'uint8');
+        elseif(leg_group==2)
+            connection.write([2 positions], 'uint8');
+        end
     end
     t_effective = toc;
     pause(0.01-t_effective)
