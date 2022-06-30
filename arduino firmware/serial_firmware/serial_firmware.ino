@@ -11,8 +11,8 @@ uint8_t i2cData[14]; // Buffer for I2C data
 double accX, accY, accZ;
 double gyroX, gyroY, gyroZ;
 double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
-const int trigPin = A3;  // pin connected to Echo Pin in the ultrasonic distance sensor
-const int echoPin = A2;  // pin connected to trig Pin in the ultrasonic distance sensor
+const int trigPin = A2;  // pin connected to Echo Pin in the ultrasonic distance sensor
+const int echoPin = A3;  // pin connected to trig Pin in the ultrasonic distance sensor
 
 
 
@@ -142,7 +142,7 @@ byte bytes_write[4];
 uint8_t current_angle;
 float dc, angle_z[1];
 long duration;
-double distance;
+float distance;
 
 void loop() {
   /*
@@ -186,13 +186,13 @@ void loop() {
 
       case 3:
           //write ultrasonic measurement
+          
           digitalWrite(trigPin, HIGH);
           delayMicroseconds(10);
           digitalWrite(trigPin, LOW);
           duration = pulseIn(echoPin, HIGH);
           distance = duration * 0.034/2;//send out only distance
           memcpy(bytes_write, &distance, 4);
-          
           Serial.write(bytes_write, 4);
           
       break;

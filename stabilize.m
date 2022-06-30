@@ -1,4 +1,4 @@
-function [] = (serial_obj)
+function [] = stabilize(serial_obj)
 
 arduino_servo_pos(serial_obj,[45 90 135 90 90 90], 1);
 arduino_servo_pos(serial_obj, [90 90 45 90 135 90], 2);
@@ -21,6 +21,9 @@ while(1)
     theta_new=theta_old+angleX;
     theta_abs = K*abs(theta_new);
     arg = (l2-a*sind(theta_abs))/l2;
+    if(abs(arg)>1)
+        arg
+    end
     q = acosd(arg);
 
     if (theta_new>threshold && theta_new>theta_old)

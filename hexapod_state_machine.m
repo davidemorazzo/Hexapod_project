@@ -75,9 +75,9 @@ while true
                 "\n2 -> Walk backward" + ...
                 "\n3 -> Rotate right" + ...
                 "\n4 -> Rotate left" + ...
-                "\n5 -> Steady\n" + ...
+                "\n5 -> Steady" + ...
                 "\n6 -> Ultrasonic" + ...
-                "\n7 -> Avoid obstacle");
+                "\n7 -> Avoid obstacle\n");
             user_input = int8(user_input);
             switch user_input
                 case 1
@@ -123,146 +123,78 @@ while true
         % ----- State rotate_left ---------
 
         case 'rotate_left'
-            rotation_angle = 22.5;
-            [step1, theta_a1] = turn_generate_traj(legs, group1, rotation_angle);
-            [step2, theta_a2] = turn_generate_traj(legs, group2, rotation_angle);
-            j=1;
-            k=2;
-            for i=1:3
-                [tj_support(:, :, j), P0(j, :, :), P1(j, :, :)] = kinematic_inversion(legs, step1(i), theta_a1(i), j, N_points);
-                [tj_support(:, :, k), P0(k, :, :), P1(k, :, :)] = kinematic_inversion(legs, step2(i), theta_a2(i), k, N_points);
-                j=j+2;
-                k=k+2;
-            end
-            for i=1:6
-                tj_positioning(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'positioning', i);
-                tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
-                tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
-%                 pause
-            end
-            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
-                'positioning', 'none', N_points);
-            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
-                'execution', 'positioning', N_points);
-            for i=1:2
-                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
-                    'return', 'execution', N_points);
-                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
-                    'execution', 'return', N_points);
-            end
-            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
-                'stabilizing', 'execution', N_points);
-            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
-                'none', 'stabilizing', N_points);
-        next_state = 'wait_for_input';
+            rotation_angle = 22.5; % 90 degrees
+            
+            N_points = 16;
+            move_rotation(legs, serial_obj, rotation_angle, N_points);
+            next_state = 'wait_for_input';
 
         % ----- State rotate_right --------
 
         case 'rotate_right'
             rotation_angle = -22.5;
-            [step1, theta_a1] = turn_generate_traj(legs, group1, rotation_angle);
-            [step2, theta_a2] = turn_generate_traj(legs, group2, rotation_angle);
-            j=1;
-            k=2;
-            for i=1:3
-                [tj_support(:, :, j), P0(j, :, :), P1(j, :, :)] = kinematic_inversion(legs, step1(i), theta_a1(i), j, N_points);
-                [tj_support(:, :, k), P0(k, :, :), P1(k, :, :)] = kinematic_inversion(legs, step2(i), theta_a2(i), k, N_points);
-                j=j+2;
-                k=k+2;
-            end
-            for i=1:6
-                tj_positioning(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'positioning', i);
-                tj_return(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'return', i);
-                tj_stabilize(:, :, i) = create_joint_traj(tj_support(:, :, i), N_points, 'stabilizing', i);
-%                 pause
-            end
-            execute_trajectory(serial_obj, tj_positioning(:, :, group1), [], ...
-                'positioning', 'none', N_points);
-            execute_trajectory(serial_obj, tj_support(:, :, group1), tj_positioning(:, :, group2), ...
-                'execution', 'positioning', N_points);
-            for i=1:2
-                execute_trajectory(serial_obj, tj_return(:, :, group1), tj_support(:, :, group2), ...
-                    'return', 'execution', N_points);
-                execute_trajectory(serial_obj, tj_support(:, :, group1), tj_return(:, :, group2), ...
-                    'execution', 'return', N_points);
-            end
-            execute_trajectory(serial_obj, tj_stabilize(:, :, group1), tj_support(:, :, group2), ...
-                'stabilizing', 'execution', N_points);
-            execute_trajectory(serial_obj, [], tj_stabilize(:, :, group2), ...
-                'none', 'stabilizing', N_points);
-        next_state = 'wait_for_input';
+            N_points = 16;
+            move_rotation(legs, serial_obj, rotation_angle, N_points);
+            next_state = 'wait_for_input';
 
         % ----- State steady --------------
         
         case 'steady'
         
         % ----- State read ultrasonic -------
-
-        arduino_servo_pos(serial_obj,[45 90 135 90 90 90], 1);
-        arduino_servo_pos(serial_obj, [90 90 45 90 135 90], 2);
-        l1 = 3.75;
-        base = 8.7;
-        tool_off = 2.25;
-        l2 = 6.05;
-        a = 2*l1+base+tool_off;
-        while(1)
-            [angleX, angleY] = arduino_read_angle(serial_obj);
-            if(angleX<=1)
-                angleX
-            end
-            if(angleX>1)
-                arg = (l2-a*sind(angleX))/l2;
-                q = acosd(arg)
-                arduino_servo_pos(serial_obj, [45 90-q 135 90-q 90 90], 1)
-                arduino_servo_pos(serial_obj, [90 90-q 45 90 135 90], 2);
-            end
-%             else
-%                 arduino_servo_pos(serial_obj, [45 90 135 90 90 90+q], 1)
-%                 arduino_servo_pos(serial_obj, [90 90 45 90+q 135 90+q], 2);
-%             end
-            pause(0.01)
-        end
+        stabilize(serial_obj);
         next_state = 'wait_for_input';
         
         case 'ultrasonic'
-            map_the_surroundings(serial_obj);
-        
+            [table] = map_the_surroundings(serial_obj);
+            figure
+            polarplot (table(:,1)*pi/180, table (:,2)); %just plotting the results into a radar form
+            title('Map of the Environment');
+            thetalim([20 160]);
+            grid on;
+            pause
             next_state = 'wait_for_input';
+
         case 'avoid_obstacle'
             arduino_head_pos(serial_obj,90);
             while(1)
 
-            distance=arduino_ultrasonic(serial_obj);
-            step = 3; % step length
-            N_routines = 3; % number of moving routines to be executed
-            N_points = 16; % number of points in the trajectory discretization
-            if distance>25
+                distance=arduino_ultrasonic(serial_obj);
+                step = 3; % step length
+                N_points = 16; % number of points in the trajectory discretization
+                if distance>25
+                    N_routines = 2; % number of moving routines to be executed
+                    theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+                    move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+                else
+                    N_points = 16;
+                    rotation_sign = sign(rand-0.5); % definition of rotation direction via probabilistic approach
+                    rotation_angle = 22.5;
+                    move_rotation(legs, serial_obj, rotation_angle, N_points);
 
-            
-            theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
-           
-            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
-
-            else
-
-            theta_a = 90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
-           
-            move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
-
-
-
+                    rotation_angle = rotation_sign*(11.25+sqrt(5)*randn);
+                    move_rotation(legs, serial_obj, rotation_angle, N_points);
+                end
             end
 
-
-            end
-
-
-
+%             while(1)
+% 
+%                 distance=arduino_ultrasonic(serial_obj);
+%                 step = 3; % step length
+%                 N_points = 16; % number of points in the trajectory discretization
+%                 if distance>25
+%                     N_routines = 3; % number of moving routines to be executed
+%                     theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+%                     move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+%                 else
+%                     N_routines = 6; % number of moving routines to be executed
+%                     theta_a = 90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
+%                     move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
+%                 end
+%             end
             next_state = 'wait_for_input';
         otherwise
             next_state = 'wait_for_input';
-        
-        
     end
 
     current_state = next_state;
