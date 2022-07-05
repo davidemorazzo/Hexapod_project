@@ -77,7 +77,8 @@ while true
                 "\n4 -> Rotate left" + ...
                 "\n5 -> Steady" + ...
                 "\n6 -> Ultrasonic" + ...
-                "\n7 -> Avoid obstacle\n");
+                "\n7 -> Avoid obstacle" + ...
+                "\n8 -> MPU reading\n");
             user_input = int8(user_input);
             switch user_input
                 case 1
@@ -94,7 +95,8 @@ while true
                     next_state='ultrasonic';
                 case 7
                     next_state='avoid_obstacle';
-                
+                case 8
+                    next_state = 'mpu_reading';
                 otherwise
                     next_state = 'wait_for_input';
             end
@@ -140,11 +142,12 @@ while true
         % ----- State steady --------------
         
         case 'steady'
+            arduino_servo_pos(serial_obj, 90*ones(6, 1), 1);
+            arduino_servo_pos(serial_obj, 90*ones(6, 1), 2);
+            next_state = 'wait_for_input';
         
+
         % ----- State read ultrasonic -------
-        stabilize(serial_obj);
-        next_state = 'wait_for_input';
-        
         case 'ultrasonic'
             [table] = map_the_surroundings(serial_obj);
             figure
@@ -192,6 +195,9 @@ while true
 %                     move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
 %                 end
 %             end
+            next_state = 'wait_for_input';
+        case 'mpu_reading'
+            stabilize(serial_obj);
             next_state = 'wait_for_input';
         otherwise
             next_state = 'wait_for_input';
