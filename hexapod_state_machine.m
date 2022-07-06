@@ -172,7 +172,7 @@ while true
                 else
                     N_points = 16;
                     rotation_sign = sign(rand-0.5); % definition of rotation direction via probabilistic approach
-                    rotation_angle = 22.5;
+                    rotation_angle = rotation_sign*22.5;
                     move_rotation(legs, serial_obj, rotation_angle, N_points);
 
                     rotation_angle = rotation_sign*(11.25+sqrt(5)*randn);
