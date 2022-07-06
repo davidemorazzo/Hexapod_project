@@ -2,7 +2,7 @@ clear
 close 
 clc
 format compact
-
+rng('shuffle')
 % Lista degli stati
 % - wait for input
 
@@ -176,6 +176,9 @@ while true
                     move_rotation(legs, serial_obj, rotation_angle, N_points);
 
                     rotation_angle = rotation_sign*(11.25+sqrt(5)*randn);
+                    % possible changes: (comment the above one to test)
+                    % rotation_angle = rotation_sign*(11.25+sqrt(8)*randn);
+                    % rotation_angle = rotation_sign*22.5*rand;
                     move_rotation(legs, serial_obj, rotation_angle, N_points);
                 end
             end
