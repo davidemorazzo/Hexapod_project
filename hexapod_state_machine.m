@@ -182,22 +182,6 @@ while true
                     move_rotation(legs, serial_obj, rotation_angle, N_points);
                 end
             end
-
-%             while(1)
-% 
-%                 distance=arduino_ultrasonic(serial_obj);
-%                 step = 3; % step length
-%                 N_points = 16; % number of points in the trajectory discretization
-%                 if distance>25
-%                     N_routines = 3; % number of moving routines to be executed
-%                     theta_a = 0; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
-%                     move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
-%                 else
-%                     N_routines = 6; % number of moving routines to be executed
-%                     theta_a = 90; % direction of the hexapod [deg] (0 -> forward, 90 -> right)
-%                     move_linear(legs, serial_obj, step, theta_a, N_routines, N_points);
-%                 end
-%             end
             next_state = 'wait_for_input';
         case 'mpu_reading'
             stabilize(serial_obj);
