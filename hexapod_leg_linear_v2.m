@@ -4,7 +4,7 @@ close all
 
 %% Create robot
 % Link length
-% l0 = 5;
+l0 = 5;
 l1 = 3.75;
 l2 = 6.05;
 o_1 = -3.1;
@@ -26,7 +26,7 @@ leg = SerialLink([base, leg1, leg2],...
 
 %% Trajectory planning
 v_x = 0;                        % [m/s] vel
-v_y = 1;                        % [m/s] vel
+v_y = 3;                        % [m/s] vel
 v = [v_x;v_y;0];
 support_time = 3;               % [s] time of support phase
 
@@ -46,7 +46,7 @@ Ps = SE3(P0);
 Pe = SE3(P1);
 
 % Inverse kinematic trajectory
-N_points = 10;
+N_points = 40;
 M = [1 1 1 0 0 0];
 tj_points = ctraj(Ps, Pe, N_points);
 tic
@@ -61,24 +61,39 @@ return_tj = jtraj(joint_points(end,:), joint_points(1,:), N_points);
 return_tj(1:N_points/2,3) = linspace(joint_points(end,3), max_heigth, N_points/2);
 return_tj(N_points/2+1:end,3) = linspace(max_heigth, joint_points(1,3), N_points/2);
 
+%% Positioning tj
+px = [0.4090    0.7584/2    0.8];
+positioning_traj(1:N_points/2,:) = jtraj(q_stable, px, N_points/2);
+positioning_traj(N_points/2+1:N_points,:) = jtraj(px, joint_points(end,:), N_points/2);
+
+px = [0.4090    -0.7584/2    0.8];
+stabilize_traj(1:N_points/2,:) = jtraj(q_stable, px, N_points/2);
+stabilize_traj(N_points/2+1:N_points,:) = jtraj(px, joint_points(1,:), N_points/2);
+
+% positioning_traj(1:N_points/2,2) = linspace(q_stable(2), 0.7584/2, N_points/2);
+% positioning_traj(N_points/2+1:N_points,2) = linspace(0.7584/2, joint_points(end,2), N_points/2);
+% positioning_traj(1:N_points/2,3) = linspace(q_stable(3), max_heigth, N_points/2);
+% positioning_traj(N_points/2+1:N_points,3) = linspace(max_heigth, joint_points(end,3), N_points/2);
+% positioning_traj(:,1) = joint_points(1,1)*ones(N_points,1);
+
 %% Plotting
 % Figure representing the hexapod base heigth during the movement
-figure
-sgtitle('Support phase')
-subplot(311)
-plot(joint_points(:,1))          % plot bot heigth during movement
-ylabel('Heigth')
-grid on
-subplot(312)
-plot(joint_points(:,2))          % plot bot heigth during movement
-xlabel('Trajectory point')
-ylabel('\theta_2')
-grid on
-subplot(313)
-plot(joint_points(:,3))          % plot bot heigth during movement
-xlabel('Trajectory point')
-ylabel('\theta_3')
-grid on
+% figure
+% sgtitle('Support phase')
+% subplot(311)
+% plot(joint_points(:,1))          % plot bot heigth during movement
+% ylabel('Heigth')
+% grid on
+% subplot(312)
+% plot(joint_points(:,2))          % plot bot heigth during movement
+% xlabel('Trajectory point')
+% ylabel('\theta_2')
+% grid on
+% subplot(313)
+% plot(joint_points(:,3))          % plot bot heigth during movement
+% xlabel('Trajectory point')
+% ylabel('\theta_3')
+% grid on
 
 % add points and lines to the robot plot
 figure, hold
@@ -87,8 +102,10 @@ plot3(Ps.t(1), Ps.t(2), Ps.t(3), 'ko')
 plot3(Pe.t(1), Pe.t(2), Pe.t(3), 'k*')
 plot3([Ps.t(1);Pe.t(1)], [Ps.t(2);Pe.t(2)], [Ps.t(3);Pe.t(3)], 'k--')
 
-% Animate trajectory
-leg.plot([joint_points; return_tj],...
+% % Animate trajectory
+% leg.plot([joint_points; return_tj],...
+%     'floorlevel', 0, ...
+%     'noname', 'trail', 'b--.')
+leg.plot([positioning_traj; stabilize_traj],...
     'floorlevel', 0, ...
-    'noname', 'trail', 'b--.', 'loop')
-
+    'noname', 'trail', 'b--.')
